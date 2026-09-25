@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#071b30">
+<title>Pétanque Ottawa-Vanier | Live Scores</title>
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.5/dist/peerjs.min.js" defer></script>
+<script src="public.js" defer></script>
+</head>
+<body>
+<header class="public-hero">
+  <div class="shell toolbar-between">
+    <div class="public-brand">
+      <img src="pov-logo.png" class="logo" alt="Pétanque Ottawa-Vanier logo">
+      <div><h1 id="publicTournamentName">Pétanque Ottawa-Vanier</h1><p data-i18n="liveScores">Live tournament scores</p></div>
+    </div>
+    <div>
+      <div class="toolbar" style="justify-content:flex-end;margin-bottom:8px">
+        <button id="langEn" class="lang-btn active">EN</button><button id="langFr" class="lang-btn">FR</button>
+      </div>
+      <div class="public-status"><span id="connectionDot" class="live-dot"></span><span id="connectionText" data-i18n="connecting">Connecting…</span></div>
+    </div>
+  </div>
+</header>
+<main class="shell">
+  <div id="viewerMessage" class="notice gold public-section" data-i18n="waiting">Waiting for tournament data…</div>
+  <section class="public-section">
+    <div class="section-title"><h2 data-i18n="currentRound">Current round</h2><span id="roundLabel" class="badge"></span></div>
+    <div id="currentRoundArea" class="card" style="padding:0"></div>
+  </section>
+  <section class="public-section">
+    <div class="section-title"><h2 data-i18n="standings">Standings</h2></div>
+    <div id="publicStandings"></div>
+  </section>
+  <section class="public-section">
+    <div class="section-title"><h2 data-i18n="results">Previous results</h2></div>
+    <div id="resultsArea"></div>
+  </section>
+</main>
+<footer class="shell footer">Pétanque Ottawa-Vanier · <span data-i18n="liveBoard">Live Board</span></footer>
+</body>
+</html>

@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#071b30">
+<title>Pétanque Ottawa-Vanier | Tournament Manager</title>
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.5/dist/peerjs.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
+<script src="app.js" defer></script>
+</head>
+<body>
+<header class="hero">
+  <div class="shell hero-inner">
+    <div class="brand">
+      <img src="pov-logo.png" alt="Pétanque Ottawa-Vanier logo" class="logo">
+      <div>
+        <h1>Pétanque Ottawa-Vanier</h1>
+        <p data-i18n="managerSubtitle">Swiss Tournament Manager · Partner Draw · Live Scores</p>
+      </div>
+    </div>
+    <div class="hero-actions no-print">
+      <div class="live-pill"><span id="liveDot" class="live-dot"></span><span id="liveText" data-i18n="liveOff">Live board off</span></div>
+      <button id="langEn" class="lang-btn active">EN</button>
+      <button id="langFr" class="lang-btn">FR</button>
+    </div>
+  </div>
+</header>
+
+<div class="tabs-wrap no-print">
+  <nav class="shell tabs">
+    <button class="tab-btn active" data-tab="teams" data-i18n="tabTeams">Players & Teams</button>
+    <button class="tab-btn" data-tab="swiss" data-i18n="tabSwiss">Swiss Tournament</button>
+    <button class="tab-btn" data-tab="standings" data-i18n="tabStandings">Standings</button>
+    <button class="tab-btn" data-tab="live" data-i18n="tabLive">Live & QR</button>
+  </nav>
+</div>
+
+<main class="shell">
+<section id="panel-teams" class="panel active">
+  <div class="grid">
+    <article class="card span-4">
+      <h2 data-i18n="tournamentSetup">Tournament setup</h2>
+      <p class="sub" data-i18n="tournamentSetupSub">Set the event format before building teams.</p>
+      <div class="field"><label data-i18n="tournamentName">Tournament name</label><input id="tournamentName" value="Pétanque Ottawa-Vanier Tournament"></div>
+      <div class="row2">
+        <div class="field"><label data-i18n="teamFormat">Team format</label>
+          <select id="teamSize">
+            <option value="1" data-i18n="singles">Singles / Tête-à-tête</option>
+            <option value="2" selected data-i18n="doubles">Doubles / Doublettes</option>
+            <option value="3" data-i18n="triples">Triples / Triplettes</option>
+          </select>
+        </div>
+        <div class="field"><label data-i18n="teamMethod">Team method</label>
+          <select id="teamMethod">
+            <option value="balanced" data-i18n="balanced">Balanced partner draw</option>
+            <option value="random" data-i18n="random">Fully random</option>
+          </select>
+        </div>
+      </div>
+      <div class="notice gold" data-i18n="teamNamingNote">Teams are named after their shooter — for example, “Team Senih”.</div>
+    </article>
+
+    <article class="card span-8">
+      <h2 data-i18n="playerPools">Player pools</h2>
+      <p class="sub" data-i18n="playerPoolsSub">Enter shooters and pointers separately. Balanced mode uses the roles when forming teams.</p>
+      <div class="pool-wrap">
+        <div class="pool">
+          <div class="pool-head"><h3 data-i18n="shooters">Shooters / Tireurs</h3><span id="shooterCount" class="count">0</span></div>
+          <div class="pool-body">
+            <div class="add-line"><input id="shooterInput" placeholder="Shooter name"><button id="addShooter" class="btn btn-primary" data-i18n="add">Add</button></div>
+            <div id="shooterList" class="player-list"></div><div id="shooterEmpty" class="empty" data-i18n="noShooters">No shooters added.</div>
+          </div>
+        </div>
+        <div class="pool">
+          <div class="pool-head"><h3 data-i18n="pointers">Pointers / Pointeurs</h3><span id="pointerCount" class="count">0</span></div>
+          <div class="pool-body">
+            <div class="add-line"><input id="pointerInput" placeholder="Pointer name"><button id="addPointer" class="btn btn-primary" data-i18n="add">Add</button></div>
+            <div id="pointerList" class="player-list"></div><div id="pointerEmpty" class="empty" data-i18n="noPointers">No pointers added.</div>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <article class="card">
+      <div class="toolbar-between">
+        <div><h2 data-i18n="generatedTeams">Generated teams</h2><p class="sub" id="teamSummary" data-i18n="noTeams">No teams built yet.</p></div>
+        <div class="toolbar no-print">
+          <button id="buildTeams" class="btn btn-gold" data-i18n="buildTeams">Build teams</button>
+          <button id="reshuffleTeams" class="btn btn-soft" data-i18n="reshuffle">Reshuffle</button>
+        </div>
+      </div>
+      <div id="teamGrid" class="team-grid"></div>
+    </article>
+  </div>
+</section>
+
+<section id="panel-swiss" class="panel">
+  <div class="grid">
+    <article class="card span-4">
+      <h2 data-i18n="swissSetup">Swiss setup</h2>
+      <p class="sub" data-i18n="swissSetupSub">Each new round is paired from the current standings while avoiding repeat opponents when possible.</p>
+      <div class="row2">
+        <div class="field"><label data-i18n="swissRounds">Swiss rounds</label>
+          <select id="maxRounds"><option value="3">3</option><option value="4" selected>4</option><option value="5">5</option><option value="6">6</option></select>
+        </div>
+        <div class="field"><label data-i18n="terrains">Terrains</label><input id="terrainCount" type="number" min="1" value="8"></div>
+      </div>
+      <div class="notice" data-i18n="swissRules">Pairing order: match points → Buchholz → point differential → points scored. A team will not receive a second bye until necessary.</div>
+      <div class="toolbar no-print" style="margin-top:12px">
+        <button id="nextRound" class="btn btn-primary" data-i18n="createNextRound">Create next Swiss round</button>
+        <button id="resetRounds" class="btn btn-danger" data-i18n="resetRounds">Reset rounds</button>
+      </div>
+    </article>
+
+    <article class="card span-8">
+      <div class="kpi-grid">
+        <div class="kpi"><div id="kpiTeams" class="v">0</div><div class="l" data-i18n="teams">Teams</div></div>
+        <div class="kpi"><div id="kpiRound" class="v">0</div><div class="l" data-i18n="roundsPlayed">Rounds created</div></div>
+        <div class="kpi"><div id="kpiMatches" class="v">0</div><div class="l" data-i18n="completedMatches">Completed matches</div></div>
+        <div class="kpi"><div id="kpiLive" class="v">0</div><div class="l" data-i18n="liveViewers">Live viewers</div></div>
+      </div>
+      <div id="swissStatus" class="notice gold" style="margin-top:12px"></div>
+    </article>
+
+    <article class="card">
+      <div class="toolbar-between">
+        <div><h2 data-i18n="roundsMatches">Rounds & matches</h2><p class="sub" data-i18n="scoreSub">Enter scores after each match. The next Swiss round unlocks when all current-round matches are complete.</p></div>
+        <button id="printTournament" class="btn btn-soft no-print" data-i18n="printPdf">Print / Save PDF</button>
+      </div>
+      <div id="roundsArea"></div>
+    </article>
+  </div>
+</section>
+
+<section id="panel-standings" class="panel">
+  <div class="grid">
+    <article class="card">
+      <div class="toolbar-between">
+        <div><h2 data-i18n="standings">Swiss standings</h2><p class="sub" data-i18n="standingsSub">Buchholz is the sum of your opponents’ match points and rewards strength of schedule.</p></div>
+        <button id="createPlayoff" class="btn btn-green no-print" data-i18n="top4Playoff">Create Top 4 playoff</button>
+      </div>
+      <div id="standingsArea"></div>
+    </article>
+    <article class="card">
+      <h2 data-i18n="playoff">Optional Top 4 playoff</h2>
+      <p class="sub" data-i18n="playoffSub">1st vs 4th and 2nd vs 3rd. The final appears after both semifinal scores are entered.</p>
+      <div id="playoffArea"></div>
+    </article>
+  </div>
+</section>
+
+<section id="panel-live" class="panel">
+  <div class="grid">
+    <article class="card span-5">
+      <h2 data-i18n="liveBoard">Public live scoreboard</h2>
+      <p class="sub" data-i18n="liveBoardSub">Spectators scan one QR code and see standings, pairings and scores update on their phones.</p>
+      <div id="hostWarning" class="notice gold"></div>
+      <div class="field" style="margin-top:12px"><label data-i18n="publicUrl">Public website URL</label><input id="publicBaseUrl" placeholder="https://your-site.netlify.app/"></div>
+      <div class="toolbar">
+        <button id="startLive" class="btn btn-gold" data-i18n="startLive">Start live board</button>
+        <button id="stopLive" class="btn btn-danger hidden" data-i18n="stopLive">Stop live board</button>
+      </div>
+      <div id="liveDetails" class="hidden" style="margin-top:14px">
+        <label data-i18n="spectatorLink">Spectator link</label>
+        <div id="viewerLink" class="live-link"></div>
+        <div class="toolbar" style="margin-top:9px">
+          <button id="copyLink" class="btn btn-soft btn-sm" data-i18n="copyLink">Copy link</button>
+          <button id="openViewer" class="btn btn-soft btn-sm" data-i18n="openBoard">Open public board</button>
+        </div>
+      </div>
+      <div class="notice" style="margin-top:14px" data-i18n="liveRequirement">Free live mode uses a direct browser-to-browser connection. Keep this organizer page open during the tournament. No spectator account is required.</div>
+    </article>
+
+    <article class="card span-7">
+      <h2 data-i18n="scanQr">Scan to follow live</h2>
+      <p class="sub" data-i18n="scanQrSub">Once the site is hosted publicly and Live Board is started, this QR opens the spectator scoreboard.</p>
+      <div id="qrCode" class="qr-box"><div class="empty" data-i18n="qrWaiting">Start Live Board to create the QR code.</div></div>
+    </article>
+  </div>
+</section>
+</main>
+<footer class="shell footer">Pétanque Ottawa-Vanier · Tournament Manager</footer>
+</body>
+</html>

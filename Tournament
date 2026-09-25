@@ -1,0 +1,703 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#071b30">
+<title>Pétanque Ottawa-Vanier | Live Scores</title>
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.5/dist/peerjs.min.js" defer></script>
+<script src="public.js" defer></script>
+</head>
+<body>
+<header class="public-hero">
+  <div class="shell toolbar-between">
+    <div class="public-brand">
+      <img src="pov-logo.png" class="logo" alt="Pétanque Ottawa-Vanier logo">
+      <div><h1 id="publicTournamentName">Pétanque Ottawa-Vanier</h1><p data-i18n="liveScores">Live tournament scores</p></div>
+    </div>
+    <div>
+      <div class="toolbar" style="justify-content:flex-end;margin-bottom:8px">
+        <button id="langEn" class="lang-btn active">EN</button><button id="langFr" class="lang-btn">FR</button>
+      </div>
+      <div class="public-status"><span id="connectionDot" class="live-dot"></span><span id="connectionText" data-i18n="connecting">Connecting…</span></div>
+    </div>
+  </div>
+</header>
+<main class="shell">
+  <div id="viewerMessage" class="notice gold public-section" data-i18n="waiting">Waiting for tournament data…</div>
+  <section class="public-section">
+    <div class="section-title"><h2 data-i18n="currentRound">Current round</h2><span id="roundLabel" class="badge"></span></div>
+    <div id="currentRoundArea" class="card" style="padding:0"></div>
+  </section>
+  <section class="public-section">
+    <div class="section-title"><h2 data-i18n="standings">Standings</h2></div>
+    <div id="publicStandings"></div>
+  </section>
+  <section class="public-section">
+    <div class="section-title"><h2 data-i18n="results">Previous results</h2></div>
+    <div id="resultsArea"></div>
+  </section>
+</main>
+<footer class="shell footer">Pétanque Ottawa-Vanier · <span data-i18n="liveBoard">Live Board</span></footer>
+</body>
+</html>
+
+"use strict";
+const $=id=>document.getElementById(id);
+let lang=localStorage.getItem("povPublicLang")||"en", peer=null, conn=null, data=null;
+const T={
+en:{liveScores:"Live tournament scores",connecting:"Connecting…",connected:"LIVE · Connected",disconnected:"Connection lost · showing last update",waiting:"Waiting for tournament data…",currentRound:"Current round",standings:"Standings",results:"Previous results",liveBoard:"Live Board",round:"Round",terrain:"Terrain",bye:"BYE",noRound:"No round has been published yet.",noResults:"No completed rounds yet.",team:"Team",pts:"Pts",bh:"BH",w:"W",l:"L",diff:"Diff",updated:"Updated"},
+fr:{liveScores:"Scores du tournoi en direct",connecting:"Connexion…",connected:"EN DIRECT · Connecté",disconnected:"Connexion perdue · dernière mise à jour affichée",waiting:"En attente des données du tournoi…",currentRound:"Ronde actuelle",standings:"Classement",results:"Résultats précédents",liveBoard:"Tableau en direct",round:"Ronde",terrain:"Terrain",bye:"EXEMPT",noRound:"Aucune ronde publiée pour le moment.",noResults:"Aucune ronde terminée pour le moment.",team:"Équipe",pts:"Pts",bh:"BH",w:"V",l:"D",diff:"Diff",updated:"Mis à jour"}
+};
+function t(k){return T[lang][k]||k}
+function esc(x){return String(x??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
+function teamName(id){const tm=data?.teams?.find(x=>x.id===id);return tm?`${lang==="fr"?"Équipe":"Team"} ${tm.anchorName}`:"—"}
+function setLang(l){lang=l;localStorage.setItem("povPublicLang",l);document.documentElement.lang=l;$("langEn").classList.toggle("active",l==="en");$("langFr").classList.toggle("active",l==="fr");document.querySelectorAll("[data-i18n]").forEach(el=>el.textContent=t(el.dataset.i18n));render()}
+function status(mode){$("connectionDot").classList.toggle("on",mode==="connected");$("connectionText").textContent=mode==="connected"?t("connected"):mode==="lost"?t("disconnected"):t("connecting")}
+function render(){
+ if(!data){$("viewerMessage").classList.remove("hidden");$("currentRoundArea").innerHTML=`<div class="empty">${t("noRound")}</div>`;$("publicStandings").innerHTML="";$("resultsArea").innerHTML="";return}
+ $("viewerMessage").classList.add("hidden");$("publicTournamentName").textContent=data.tournamentName||"Pétanque Ottawa-Vanier";
+ const rounds=data.rounds||[], current=rounds[rounds.length-1];$("roundLabel").textContent=current?`${t("round")} ${current.number}`:"";
+ if(!current)$("currentRoundArea").innerHTML=`<div class="empty">${t("noRound")}</div>`;
+ else{
+  let h="";current.matches.forEach(m=>{if(m.bye){h+=`<div class="viewer-match"><span class="terrain">${t("bye")}</span><strong>${esc(teamName(m.a))}</strong><div class="viewer-score">13–0</div><span></span></div>`}
+   else{const sc=(m.scoreA==null||m.scoreB==null)?"—":`${m.scoreA} – ${m.scoreB}`;h+=`<div class="viewer-match"><span class="terrain">${t("terrain")} ${m.terrain}</span><strong>${esc(teamName(m.a))}</strong><div class="viewer-score">${sc}</div><strong class="right">${esc(teamName(m.b))}</strong></div>`}});
+  $("currentRoundArea").innerHTML=h;
+ }
+ const s=data.standings||[];$("publicStandings").innerHTML=s.length?`<div class="table-wrap"><table><thead><tr><th>#</th><th>${t("team")}</th><th>${t("pts")}</th><th>${t("bh")}</th><th>${t("w")}</th><th>${t("l")}</th><th>${t("diff")}</th></tr></thead><tbody>${s.map((x,i)=>`<tr class="${i<4?"top4":""}"><td class="rank">${i+1}</td><td><strong>${esc(teamName(x.id))}</strong></td><td><strong>${x.MP}</strong></td><td>${x.BH}</td><td>${x.W}</td><td>${x.L}</td><td>${x.D>0?"+":""}${x.D}</td></tr>`).join("")}</tbody></table></div>`:"";
+ const prev=rounds.slice(0,-1).reverse();$("resultsArea").innerHTML=prev.length?prev.map(r=>`<div class="round"><div class="round-head"><strong>${t("round")} ${r.number}</strong></div>${r.matches.map(m=>m.bye?`<div class="bye-row"><strong>${esc(teamName(m.a))}</strong><strong>13–0 · ${t("bye")}</strong></div>`:`<div class="viewer-match"><span class="terrain">${t("terrain")} ${m.terrain}</span><strong>${esc(teamName(m.a))}</strong><div class="viewer-score">${m.scoreA??"—"} – ${m.scoreB??"—"}</div><strong class="right">${esc(teamName(m.b))}</strong></div>`).join("")}</div>`).join(""):`<div class="empty">${t("noResults")}</div>`;
+}
+function connect(){
+ const host=new URLSearchParams(location.search).get("host");if(!host){$("viewerMessage").textContent="Missing live tournament code.";status("lost");return}
+ if(typeof Peer==="undefined"){setTimeout(connect,800);return}
+ peer=new Peer(undefined,{debug:0});peer.on("open",()=>{conn=peer.connect(host,{reliable:true,serialization:"json"});conn.on("open",()=>status("connected"));conn.on("data",d=>{data=d;status("connected");render()});conn.on("close",()=>{status("lost");setTimeout(reconnect,2500)});conn.on("error",()=>status("lost"))});peer.on("error",()=>{status("lost");setTimeout(reconnect,3000)});
+}
+function reconnect(){try{if(peer)peer.destroy()}catch(e){}peer=null;conn=null;connect()}
+document.addEventListener("DOMContentLoaded",()=>{$("langEn").addEventListener("click",()=>setLang("en"));$("langFr").addEventListener("click",()=>setLang("fr"));setLang(lang);status("connecting");connect()});
+
+PÉTANQUE OTTAWA-VANIER — SWISS + LIVE SCOREBOARD
+
+WHAT CHANGED
+- Professional POV-branded design using the club logo from prior POV tournament artwork.
+- English / French.
+- Shooter (Tireur) and Pointer (Pointeur) pools.
+- Singles, Doubles, Triples.
+- Balanced partner draw or fully random team creation.
+- Team names use the shooter's name: e.g. Team Senih / Équipe Senih.
+- TRUE SWISS FLOW: generate one round at a time from current standings.
+- Avoids repeat opponents when possible.
+- Odd number of teams: gives a bye to the lowest-ranked team that has not already received one.
+- Swiss ranking: Match Points, Buchholz, Point Differential, Points For.
+- Optional Top 4 semifinals and final.
+- Public spectator page.
+- QR code for spectators.
+- Live updates use PeerJS browser-to-browser sync: no database account is required.
+
+FILES
+index.html   Organizer / admin dashboard
+public.html  Read-only spectator scoreboard
+app.js       Tournament logic + Swiss pairing + live broadcast
+public.js    Spectator live connection
+styles.css   Site design
+pov-logo.png POV logo
+
+IMPORTANT — QR / LIVE SCORES
+The QR/live feature needs the site to have a public HTTPS address. Opening index.html directly from your computer works for tournament management, but other phones cannot access a file:// address.
+
+FREE HOSTING
+Netlify Drop is the easiest:
+1. Unzip this package.
+2. Go to Netlify Drop in your browser.
+3. Drag the entire folder onto the page.
+4. Netlify gives you a free HTTPS address.
+5. Open that address/index.html.
+6. Go to Live & QR and press Start Live Board.
+7. Spectators scan the QR.
+8. Keep the organizer browser tab open during the tournament.
+
+GitHub Pages and Cloudflare Pages also work.
+
+LIVE MODE NOTE
+This version intentionally avoids a paid database. The organizer's browser acts as the live source. If the organizer tab closes or loses internet, spectators keep the last received scores and reconnect when the organizer is available again.
+
+
+:root{
+  --navy:#071b30; --navy2:#0d2b49; --navy3:#123b63;
+  --gold:#f7b817; --gold2:#ffd85b; --cream:#f7f2e7;
+  --paper:#f5f7fa; --white:#fff; --ink:#102235; --muted:#6b7785;
+  --line:#dce3ea; --green:#198754; --red:#c33c3c; --blue:#2764cc;
+  --shadow:0 14px 40px rgba(7,27,48,.10);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:linear-gradient(180deg,#f5f7fa,#eef2f6);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+button,input,select{font:inherit}
+button{cursor:pointer}
+.hidden{display:none!important}
+.shell{max-width:1240px;margin:0 auto;padding:0 18px}
+.hero{background:
+  radial-gradient(circle at 85% 20%,rgba(247,184,23,.16),transparent 28%),
+  linear-gradient(135deg,var(--navy),var(--navy2) 62%,#0a223a);
+  color:#fff;border-bottom:4px solid var(--gold)}
+.hero-inner{min-height:176px;display:flex;align-items:center;justify-content:space-between;gap:20px;padding:24px 0}
+.brand{display:flex;align-items:center;gap:20px}
+.logo{width:112px;height:112px;border-radius:50%;object-fit:cover;border:3px solid var(--gold);box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.brand h1{font-size:clamp(28px,4vw,48px);margin:0;letter-spacing:-.035em;line-height:1}
+.brand p{margin:8px 0 0;color:#d9e5ef;font-size:15px}
+.hero-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.lang-btn,.ghost-dark{border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.08);color:#fff;padding:9px 12px;border-radius:10px;font-weight:800}
+.lang-btn.active{background:var(--gold);border-color:var(--gold);color:var(--navy)}
+.live-pill{display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:999px;background:rgba(255,255,255,.08);font-size:13px;font-weight:800}
+.live-dot{width:9px;height:9px;border-radius:50%;background:#7b8792}.live-dot.on{background:#3ddc84;box-shadow:0 0 0 5px rgba(61,220,132,.12)}
+.tabs-wrap{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20}
+.tabs{display:flex;gap:4px;overflow:auto;padding:10px 0}
+.tab-btn{white-space:nowrap;border:0;background:transparent;border-radius:10px;padding:10px 14px;font-weight:800;color:#5f6c79}
+.tab-btn.active{background:#eef4fa;color:var(--navy)}
+main{padding:22px 0 50px}
+.panel{display:none}.panel.active{display:block}
+.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:16px}
+.card{grid-column:span 12;background:#fff;border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:18px}
+.card h2{margin:0 0 6px;font-size:21px}.card h3{margin:0 0 10px}
+.sub{margin:0 0 16px;color:var(--muted);font-size:13px}
+@media(min-width:900px){.span-4{grid-column:span 4}.span-5{grid-column:span 5}.span-6{grid-column:span 6}.span-7{grid-column:span 7}.span-8{grid-column:span 8}}
+label{display:block;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.055em;color:#6d7884;margin-bottom:6px}
+input,select{width:100%;border:1px solid #cfd8e1;background:#fff;border-radius:11px;padding:11px 12px;color:var(--ink);outline:none}
+input:focus,select:focus{border-color:#6793c2;box-shadow:0 0 0 3px rgba(39,100,204,.1)}
+.field{margin-bottom:12px}.row2{display:grid;grid-template-columns:1fr;gap:10px}.row3{display:grid;grid-template-columns:1fr;gap:10px}
+@media(min-width:620px){.row2{grid-template-columns:1fr 1fr}.row3{grid-template-columns:repeat(3,1fr)}}
+.btn{border:0;border-radius:11px;padding:11px 14px;font-weight:850;display:inline-flex;align-items:center;justify-content:center;gap:7px}
+.btn-primary{background:var(--navy);color:#fff}.btn-primary:hover{background:var(--navy3)}
+.btn-gold{background:var(--gold);color:var(--navy)}.btn-gold:hover{background:var(--gold2)}
+.btn-soft{background:#edf2f7;color:var(--navy)}.btn-danger{background:#ffeded;color:#a51f1f}.btn-green{background:#e4f6ec;color:#11693d}
+.btn-sm{padding:7px 9px;font-size:12px}
+.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.toolbar-between{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}
+.notice{border-radius:12px;padding:12px 13px;font-size:13px;background:#edf4ff;border:1px solid #d5e4f8;color:#315472}
+.notice.gold{background:#fff7da;border-color:#f5df96;color:#6f5818}.notice.red{background:#fff0f0;border-color:#f0cdcd;color:#8f2c2c}.notice.green{background:#ebf8f1;border-color:#cfe8da;color:#246645}
+.pool-wrap{display:grid;grid-template-columns:1fr;gap:14px}@media(min-width:720px){.pool-wrap{grid-template-columns:1fr 1fr}}
+.pool{border:1px solid var(--line);border-radius:15px;background:#fbfcfd;overflow:hidden}
+.pool-head{display:flex;align-items:center;justify-content:space-between;padding:13px 14px;border-bottom:1px solid var(--line);background:#f5f8fb}
+.pool-head h3{margin:0;font-size:15px}
+.count{min-width:28px;text-align:center;border-radius:999px;padding:4px 8px;background:var(--navy);color:#fff;font-size:12px;font-weight:850}
+.pool-body{padding:12px}
+.add-line{display:grid;grid-template-columns:1fr auto;gap:8px}
+.player-list{margin-top:10px}
+.player-row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 3px;border-bottom:1px solid #e9eef3}
+.player-row:last-child{border-bottom:0}
+.role{font-size:11px;font-weight:900;text-transform:uppercase;border-radius:999px;padding:4px 7px}
+.role.shooter{background:#fff0c6;color:#7a5600}.role.pointer{background:#e4f4ff;color:#14557c}
+.empty{border:1px dashed #cbd6df;border-radius:13px;padding:18px;color:#7c8995;text-align:center;font-size:13px}
+.team-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
+.team-card{border:1px solid var(--line);border-radius:15px;background:#fff;overflow:hidden}
+.team-card-head{padding:11px 13px;background:linear-gradient(135deg,var(--navy),#12395f);color:#fff;display:flex;justify-content:space-between;gap:10px;align-items:center}
+.team-card-head strong{font-size:15px}.team-card-body{padding:10px 13px}
+.team-member{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #eef2f5}.team-member:last-child{border-bottom:0}
+.kpi-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}@media(min-width:700px){.kpi-grid{grid-template-columns:repeat(4,1fr)}}
+.kpi{border-radius:14px;padding:14px;background:#f5f8fb;border:1px solid var(--line)}.kpi .v{font-size:24px;font-weight:950;color:var(--navy)}.kpi .l{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:800}
+.round{border:1px solid var(--line);border-radius:17px;overflow:hidden;margin-top:14px;background:#fff}
+.round-head{padding:12px 14px;background:#edf3f8;display:flex;justify-content:space-between;gap:10px;align-items:center}
+.round-head strong{color:var(--navy)}
+.match{display:grid;grid-template-columns:70px 1fr 64px 22px 64px 1fr;gap:8px;align-items:center;padding:11px 13px;border-top:1px solid var(--line)}
+.match:first-of-type{border-top:0}.terrain{font-size:11px;font-weight:900;border-radius:999px;padding:5px 7px;text-align:center;background:#fff5cf;color:#745600}
+.score{width:64px!important;text-align:center;padding:8px!important;font-weight:900}.right{text-align:right}
+.result-score{font-weight:950;font-size:17px;text-align:center}
+.bye-row{padding:11px 13px;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:12px}
+@media(max-width:720px){.match{grid-template-columns:50px 1fr 48px 12px 48px 1fr;font-size:12px;padding:9px}.score{width:48px!important}.terrain{font-size:9px}}
+.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:14px}
+table{width:100%;border-collapse:collapse;min-width:720px;background:#fff}
+th,td{padding:10px 9px;border-bottom:1px solid var(--line);text-align:center;font-size:13px}
+th{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:#687582;background:#f5f8fa}
+th:nth-child(2),td:nth-child(2){text-align:left}
+tr:last-child td{border-bottom:0}
+.rank{font-weight:950;color:var(--navy)}.top4 td{background:#fffaf0}
+.qr-box{display:flex;align-items:center;justify-content:center;min-height:230px;border:1px solid var(--line);border-radius:16px;background:#fff}
+#qrCode img,#qrCode canvas{max-width:210px!important;height:auto!important}
+.live-link{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;word-break:break-all;background:#f3f6f8;border:1px solid var(--line);border-radius:10px;padding:10px}
+.public-hero{padding:18px 0;background:linear-gradient(135deg,var(--navy),#12395f);border-bottom:4px solid var(--gold);color:#fff}
+.public-brand{display:flex;align-items:center;gap:14px}.public-brand .logo{width:78px;height:78px}.public-brand h1{margin:0;font-size:clamp(24px,4vw,38px)}.public-brand p{margin:6px 0 0;color:#dbe7ef}
+.public-status{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:850;color:#dbe7ef}
+.public-section{margin-top:18px}.section-title{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:10px}.section-title h2{font-size:19px;margin:0}
+.viewer-match{display:grid;grid-template-columns:60px 1fr 70px 1fr;gap:10px;align-items:center;padding:13px;border-top:1px solid var(--line)}.viewer-match:first-child{border-top:0}.viewer-score{font-size:21px;font-weight:950;text-align:center;color:var(--navy)}
+.footer{text-align:center;color:#7b8794;font-size:12px;padding:25px 0 35px}
+@media print{.no-print,.tabs-wrap,.hero-actions{display:none!important}.hero{background:#fff;color:#111;border:0}.brand p{color:#555}.card{box-shadow:none}.panel{display:block!important}}
+
+
+"use strict";
+const $=id=>document.getElementById(id);
+const KEY="povSwissLiveV1";
+const PEER_KEY="povSwissPeerIdV1";
+let lang=localStorage.getItem("povLang")||"en";
+let state=freshState();
+let peer=null, liveClients=new Set(), liveActive=false, livePeerId=null, viewerUrl="";
+
+const I={
+en:{
+ managerSubtitle:"Swiss Tournament Manager · Partner Draw · Live Scores",liveOff:"Live board off",liveOn:"Live board on",
+ tabTeams:"Players & Teams",tabSwiss:"Swiss Tournament",tabStandings:"Standings",tabLive:"Live & QR",
+ tournamentSetup:"Tournament setup",tournamentSetupSub:"Set the event format before building teams.",tournamentName:"Tournament name",teamFormat:"Team format",
+ singles:"Singles / Tête-à-tête",doubles:"Doubles / Doublettes",triples:"Triples / Triplettes",teamMethod:"Team method",balanced:"Balanced partner draw",random:"Fully random",
+ teamNamingNote:"Teams are named after their shooter — for example, “Team Senih”.",playerPools:"Player pools",playerPoolsSub:"Enter shooters and pointers separately. Balanced mode uses the roles when forming teams.",
+ shooters:"Shooters / Tireurs",pointers:"Pointers / Pointeurs",add:"Add",noShooters:"No shooters added.",noPointers:"No pointers added.",generatedTeams:"Generated teams",noTeams:"No teams built yet.",
+ buildTeams:"Build teams",reshuffle:"Reshuffle",swissSetup:"Swiss setup",swissSetupSub:"Each new round is paired from the current standings while avoiding repeat opponents when possible.",swissRounds:"Swiss rounds",terrains:"Terrains",
+ swissRules:"Pairing order: match points → Buchholz → point differential → points scored. A team will not receive a second bye until necessary.",createNextRound:"Create next Swiss round",resetRounds:"Reset rounds",
+ teams:"Teams",roundsPlayed:"Rounds created",completedMatches:"Completed matches",liveViewers:"Live viewers",roundsMatches:"Rounds & matches",scoreSub:"Enter scores after each match. The next Swiss round unlocks when all current-round matches are complete.",
+ printPdf:"Print / Save PDF",standings:"Swiss standings",standingsSub:"Buchholz is the sum of your opponents’ match points and rewards strength of schedule.",top4Playoff:"Create Top 4 playoff",
+ playoff:"Optional Top 4 playoff",playoffSub:"1st vs 4th and 2nd vs 3rd. The final appears after both semifinal scores are entered.",liveBoard:"Public live scoreboard",
+ liveBoardSub:"Spectators scan one QR code and see standings, pairings and scores update on their phones.",publicUrl:"Public website URL",startLive:"Start live board",stopLive:"Stop live board",spectatorLink:"Spectator link",
+ copyLink:"Copy link",openBoard:"Open public board",liveRequirement:"Free live mode uses a direct browser-to-browser connection. Keep this organizer page open during the tournament. No spectator account is required.",
+ scanQr:"Scan to follow live",scanQrSub:"Once the site is hosted publicly and Live Board is started, this QR opens the spectator scoreboard.",qrWaiting:"Start Live Board to create the QR code.",
+ remove:"Remove",shooter:"Shooter",pointer:"Pointer",team:"Team",unassigned:"Unassigned",players:"players",teamsBuilt:"teams built",
+ noRounds:"No Swiss rounds have been created yet.",round:"Round",terrain:"Terrain",bye:"BYE",byeWin:"Bye win",matchPts:"Pts",buchholz:"BH",played:"P",wins:"W",losses:"L",ties:"T",pf:"PF",pa:"PA",diff:"Diff",
+ noStandings:"Build teams to see standings.",needTeams:"Build at least two teams first.",finishRound:"Finish every match in the current round before creating the next one.",maxRoundsDone:"All configured Swiss rounds have been created.",
+ duplicatePlayer:"That player is already registered.",needPlayers:"Add players first.",notEnoughPlayers:"Not enough players for one complete team.",unassignedNote:"Player count does not divide evenly by the selected format.",
+ resetConfirm:"Reset all Swiss rounds, scores and playoff?",playoffNeed4:"At least four teams are required.",playoffWait:"Complete all configured Swiss rounds before creating the playoff.",semifinals:"Semifinals",final:"Final",champion:"Champion",
+ localHostWarn:"You are opening the site as a local file. The tournament manager works, but phone QR sharing requires the folder to be published on a free web host first. Then paste that public URL here.",
+ hostedOk:"This page is already hosted publicly. Live QR sharing can use the current site address.",enterPublicUrl:"Enter the public website URL first.",peerUnavailable:"Live connection library could not load. Check your internet connection.",
+ liveStarted:"Live board is running. Keep this organizer tab open.",liveStopped:"Live board stopped.",copyDone:"Link copied.",currentRoundComplete:"Current round complete — next Swiss round is ready.",
+ noCurrentRound:"Create the first Swiss round when teams are ready.",roundInProgress:"Round in progress. Enter every score to unlock the next pairing.",allRoundsComplete:"Swiss stage complete.",tieAllowed:"Timed games can be entered as ties; both teams receive 0.5 match points."
+},
+fr:{
+ managerSubtitle:"Gestionnaire suisse · Tirage des partenaires · Scores en direct",liveOff:"Tableau en direct fermé",liveOn:"Tableau en direct actif",
+ tabTeams:"Joueurs et équipes",tabSwiss:"Tournoi suisse",tabStandings:"Classement",tabLive:"Direct et QR",
+ tournamentSetup:"Configuration du tournoi",tournamentSetupSub:"Définissez le format avant de créer les équipes.",tournamentName:"Nom du tournoi",teamFormat:"Format des équipes",
+ singles:"Tête-à-tête / Singles",doubles:"Doublettes / Doubles",triples:"Triplettes / Triples",teamMethod:"Méthode d'équipe",balanced:"Tirage équilibré",random:"Entièrement aléatoire",
+ teamNamingNote:"Les équipes portent le nom de leur tireur — par exemple « Équipe Senih ».",playerPools:"Listes de joueurs",playerPoolsSub:"Entrez séparément les tireurs et les pointeurs. Le mode équilibré utilise les rôles pour former les équipes.",
+ shooters:"Tireurs / Shooters",pointers:"Pointeurs / Pointers",add:"Ajouter",noShooters:"Aucun tireur ajouté.",noPointers:"Aucun pointeur ajouté.",generatedTeams:"Équipes créées",noTeams:"Aucune équipe créée.",
+ buildTeams:"Créer les équipes",reshuffle:"Mélanger",swissSetup:"Configuration suisse",swissSetupSub:"Chaque nouvelle ronde est appariée selon le classement actuel tout en évitant les adversaires déjà rencontrés lorsque possible.",swissRounds:"Rondes suisses",terrains:"Terrains",
+ swissRules:"Ordre d’appariement : points de match → Buchholz → différentiel → points marqués. Une équipe ne reçoit pas un deuxième bye avant que ce soit nécessaire.",createNextRound:"Créer la prochaine ronde",resetRounds:"Réinitialiser les rondes",
+ teams:"Équipes",roundsPlayed:"Rondes créées",completedMatches:"Matchs terminés",liveViewers:"Spectateurs en direct",roundsMatches:"Rondes et matchs",scoreSub:"Entrez les scores après chaque match. La ronde suivante se débloque lorsque tous les matchs sont terminés.",
+ printPdf:"Imprimer / PDF",standings:"Classement suisse",standingsSub:"Le Buchholz est la somme des points de match de vos adversaires et récompense la force du parcours.",top4Playoff:"Créer les séries Top 4",
+ playoff:"Séries Top 4 facultatives",playoffSub:"1er contre 4e et 2e contre 3e. La finale apparaît après les deux demi-finales.",liveBoard:"Tableau public en direct",
+ liveBoardSub:"Les spectateurs scannent un seul code QR et voient le classement, les appariements et les scores se mettre à jour sur leur téléphone.",publicUrl:"URL publique du site",startLive:"Démarrer le direct",stopLive:"Arrêter le direct",spectatorLink:"Lien spectateur",
+ copyLink:"Copier le lien",openBoard:"Ouvrir le tableau",liveRequirement:"Le mode direct gratuit utilise une connexion directe entre navigateurs. Gardez cette page organisateur ouverte pendant le tournoi. Aucun compte spectateur n’est requis.",
+ scanQr:"Scanner pour suivre en direct",scanQrSub:"Une fois le site publié et le tableau en direct démarré, ce QR ouvre le tableau des spectateurs.",qrWaiting:"Démarrez le tableau en direct pour créer le code QR.",
+ remove:"Retirer",shooter:"Tireur",pointer:"Pointeur",team:"Équipe",unassigned:"Non assignés",players:"joueurs",teamsBuilt:"équipes créées",
+ noRounds:"Aucune ronde suisse n’a encore été créée.",round:"Ronde",terrain:"Terrain",bye:"EXEMPT",byeWin:"Victoire par bye",matchPts:"Pts",buchholz:"BH",played:"J",wins:"V",losses:"D",ties:"N",pf:"PM",pa:"PC",diff:"Diff",
+ noStandings:"Créez les équipes pour voir le classement.",needTeams:"Créez au moins deux équipes.",finishRound:"Terminez tous les matchs de la ronde actuelle avant de créer la suivante.",maxRoundsDone:"Toutes les rondes suisses configurées ont été créées.",
+ duplicatePlayer:"Ce joueur est déjà inscrit.",needPlayers:"Ajoutez d’abord des joueurs.",notEnoughPlayers:"Pas assez de joueurs pour une équipe complète.",unassignedNote:"Le nombre de joueurs n’est pas divisible par le format choisi.",
+ resetConfirm:"Réinitialiser toutes les rondes suisses, les scores et les séries ?",playoffNeed4:"Il faut au moins quatre équipes.",playoffWait:"Terminez toutes les rondes suisses configurées avant de créer les séries.",semifinals:"Demi-finales",final:"Finale",champion:"Champion",
+ localHostWarn:"Le site est ouvert comme fichier local. Le gestionnaire fonctionne, mais le partage QR sur téléphone nécessite d’abord de publier le dossier sur un hébergeur web gratuit. Collez ensuite l’URL publique ici.",
+ hostedOk:"Cette page est déjà publiée. Le partage QR peut utiliser l’adresse actuelle du site.",enterPublicUrl:"Entrez d’abord l’URL publique du site.",peerUnavailable:"La bibliothèque de connexion en direct n’a pas chargé. Vérifiez votre connexion Internet.",
+ liveStarted:"Le tableau en direct fonctionne. Gardez cet onglet organisateur ouvert.",liveStopped:"Tableau en direct arrêté.",copyDone:"Lien copié.",currentRoundComplete:"La ronde actuelle est terminée — la prochaine ronde suisse est prête.",
+ noCurrentRound:"Créez la première ronde suisse lorsque les équipes sont prêtes.",roundInProgress:"Ronde en cours. Entrez tous les scores pour débloquer le prochain appariement.",allRoundsComplete:"Phase suisse terminée.",tieAllowed:"Les parties chronométrées peuvent être saisies à égalité; chaque équipe reçoit 0,5 point."
+}};
+
+function freshState(){return{
+ players:{shooter:[],pointer:[]},teams:[],unassigned:[],rounds:[],playoff:{semis:[],final:null},
+ settings:{name:"Pétanque Ottawa-Vanier Tournament",teamSize:2,teamMethod:"balanced",maxRounds:4,terrains:8}
+};}
+function t(k){return I[lang][k]||k}
+function uid(){return (crypto.randomUUID?crypto.randomUUID():Math.random().toString(36).slice(2)+Date.now())}
+function esc(x){return String(x??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
+function shuffle(a){a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function normalize(raw){
+ const s=freshState(); if(!raw||typeof raw!=="object")return s;
+ if(raw.players){if(Array.isArray(raw.players.shooter))s.players.shooter=raw.players.shooter;if(Array.isArray(raw.players.pointer))s.players.pointer=raw.players.pointer}
+ if(Array.isArray(raw.teams))s.teams=raw.teams;if(Array.isArray(raw.unassigned))s.unassigned=raw.unassigned;if(Array.isArray(raw.rounds))s.rounds=raw.rounds;
+ if(raw.playoff)s.playoff={...s.playoff,...raw.playoff};if(raw.settings)s.settings={...s.settings,...raw.settings};return s;
+}
+function load(){
+ try{state=normalize(JSON.parse(localStorage.getItem(KEY)||"null"))}catch(e){state=freshState()}
+ $("tournamentName").value=state.settings.name;$("teamSize").value=state.settings.teamSize;$("teamMethod").value=state.settings.teamMethod;
+ $("maxRounds").value=state.settings.maxRounds;$("terrainCount").value=state.settings.terrains;
+ const hosted=location.protocol==="http:"||location.protocol==="https:";
+ $("publicBaseUrl").value=hosted?new URL(".",location.href).href:(localStorage.getItem("povPublicBaseUrl")||"");
+ $("hostWarning").textContent=hosted?t("hostedOk"):t("localHostWarn");
+}
+function save(){localStorage.setItem(KEY,JSON.stringify(state));broadcastLive()}
+function syncSettings(){
+ state.settings.name=$("tournamentName").value.trim()||"Pétanque Ottawa-Vanier Tournament";
+ state.settings.teamSize=Number($("teamSize").value)||2;state.settings.teamMethod=$("teamMethod").value;
+ state.settings.maxRounds=Number($("maxRounds").value)||4;state.settings.terrains=Math.max(1,Number($("terrainCount").value)||1);save();
+}
+function teamDisplay(team){return `${lang==="fr"?"Équipe":"Team"} ${team.anchorName||"?"}`}
+function teamDisplayById(id){const tm=state.teams.find(x=>x.id===id);return tm?teamDisplay(tm):"—"}
+function playerById(id){return [...state.players.shooter,...state.players.pointer].find(p=>p.id===id)}
+function roleName(r){return r==="shooter"?t("shooter"):t("pointer")}
+
+function setLang(l){
+ lang=l;localStorage.setItem("povLang",lang);document.documentElement.lang=lang;
+ $("langEn").classList.toggle("active",lang==="en");$("langFr").classList.toggle("active",lang==="fr");
+ document.querySelectorAll("[data-i18n]").forEach(el=>el.textContent=t(el.dataset.i18n));
+ $("shooterInput").placeholder=lang==="fr"?"Nom du tireur":"Shooter name";$("pointerInput").placeholder=lang==="fr"?"Nom du pointeur":"Pointer name";
+ const hosted=location.protocol==="http:"||location.protocol==="https:";$("hostWarning").textContent=hosted?t("hostedOk"):t("localHostWarn");
+ render();
+}
+
+function addPlayer(role){
+ const inp=role==="shooter"?$("shooterInput"):$("pointerInput");const name=inp.value.trim();if(!name)return;
+ const all=[...state.players.shooter,...state.players.pointer];if(all.some(p=>String(p.name).toLowerCase()===name.toLowerCase()))return alert(t("duplicatePlayer"));
+ state.players[role].push({id:uid(),name,role});inp.value="";state.teams=[];state.unassigned=[];state.rounds=[];state.playoff={semis:[],final:null};save();render();inp.focus();
+}
+function removePlayer(role,id){
+ state.players[role]=state.players[role].filter(p=>p.id!==id);state.teams=[];state.unassigned=[];state.rounds=[];state.playoff={semis:[],final:null};save();render();
+}
+function renderPlayers(){
+ [["shooter","shooterList","shooterEmpty","shooterCount"],["pointer","pointerList","pointerEmpty","pointerCount"]].forEach(([role,l,e,c])=>{
+  $(l).innerHTML="";$(e).classList.toggle("hidden",state.players[role].length>0);$(c).textContent=state.players[role].length;
+  state.players[role].forEach(p=>{$(l).insertAdjacentHTML("beforeend",`<div class="player-row"><div><strong>${esc(p.name)}</strong> <span class="role ${role}">${roleName(role)}</span></div><button class="btn btn-danger btn-sm remove-player" data-role="${role}" data-id="${p.id}">${t("remove")}</button></div>`)})
+ })
+}
+
+function makeTeam(members){
+ const shooter=members.find(p=>p.role==="shooter");const anchor=(shooter||members[0]).name;
+ return{id:uid(),anchorName:anchor,players:members.map(p=>p.id)};
+}
+function buildTeams(){
+ syncSettings();const size=state.settings.teamSize;let S=shuffle(state.players.shooter),P=shuffle(state.players.pointer),teams=[],left=[];
+ const all=[...S,...P];if(!all.length)return alert(t("needPlayers"));if(all.length<size)return alert(t("notEnoughPlayers"));
+ if(size===1){teams=shuffle(all).map(p=>makeTeam([p]))}
+ else if(state.settings.teamMethod==="random"){
+  const mix=shuffle(all);while(mix.length>=size)teams.push(makeTeam(mix.splice(0,size)));left=mix.map(p=>p.id);
+ }else if(size===2){
+  while(S.length+P.length>=2){let m=[];if(S.length&&P.length)m=[S.shift(),P.shift()];else{const src=S.length?S:P;m=[src.shift(),src.shift()].filter(Boolean)}if(m.length===2)teams.push(makeTeam(m));else left.push(...m.map(x=>x.id))}
+  left.push(...S.map(x=>x.id),...P.map(x=>x.id));
+ }else{
+  while(S.length+P.length>=3){let m=[];
+   if(S.length&&P.length>=2)m=[S.shift(),P.shift(),P.shift()];
+   else if(S.length>=2&&P.length)m=[S.shift(),S.shift(),P.shift()];
+   else{const src=S.length>=3?S:P;if(src.length>=3)m=[src.shift(),src.shift(),src.shift()];else break}
+   if(m.length===3)teams.push(makeTeam(m));
+  }left.push(...S.map(x=>x.id),...P.map(x=>x.id));
+ }
+ state.teams=teams;state.unassigned=left;state.rounds=[];state.playoff={semis:[],final:null};save();render();
+}
+function renderTeams(){
+ $("teamGrid").innerHTML="";if(!state.teams.length){$("teamSummary").textContent=t("noTeams");return}
+ $("teamSummary").textContent=`${state.teams.length} ${t("teamsBuilt")}`;
+ state.teams.forEach(tm=>{
+  const members=tm.players.map(playerById).filter(Boolean);
+  const body=members.map(p=>`<div class="team-member"><strong>${esc(p.name)}</strong><span class="role ${p.role}">${roleName(p.role)}</span></div>`).join("");
+  $("teamGrid").insertAdjacentHTML("beforeend",`<div class="team-card"><div class="team-card-head"><strong>${esc(teamDisplay(tm))}</strong><span>${members.length} ${t("players")}</span></div><div class="team-card-body">${body}</div></div>`);
+ });
+ if(state.unassigned.length){
+  const names=state.unassigned.map(playerById).filter(Boolean).map(p=>esc(p.name)).join(", ");
+  $("teamGrid").insertAdjacentHTML("beforeend",`<div class="team-card"><div class="team-card-head"><strong>${t("unassigned")}</strong></div><div class="team-card-body"><div class="notice gold">${t("unassignedNote")}</div><p>${names}</p></div></div>`);
+ }
+}
+
+function matchKey(a,b){return[a,b].sort().join("|")}
+function historySet(){const s=new Set();state.rounds.forEach(r=>r.matches.forEach(m=>{if(!m.bye)s.add(matchKey(m.a,m.b))}));return s}
+function byeHistory(){const s=new Set();state.rounds.forEach(r=>r.matches.forEach(m=>{if(m.bye)s.add(m.a)}));return s}
+function completed(m){return m.bye||(Number.isFinite(m.scoreA)&&Number.isFinite(m.scoreB))}
+function currentRoundComplete(){if(!state.rounds.length)return true;return state.rounds[state.rounds.length-1].matches.every(completed)}
+
+function rawStats(){
+ const map={};state.teams.forEach(tm=>map[tm.id]={id:tm.id,MP:0,P:0,W:0,L:0,T:0,PF:0,PA:0,D:0,BH:0,opps:[]});
+ state.rounds.forEach(r=>r.matches.forEach(m=>{
+  const A=map[m.a];if(!A)return;
+  if(m.bye){A.P++;A.W++;A.MP+=1;A.PF+=13;A.D+=13;return}
+  if(!completed(m))return;const B=map[m.b];if(!B)return;
+  A.P++;B.P++;A.PF+=m.scoreA;A.PA+=m.scoreB;B.PF+=m.scoreB;B.PA+=m.scoreA;A.opps.push(B.id);B.opps.push(A.id);
+  if(m.scoreA>m.scoreB){A.W++;B.L++;A.MP+=1}else if(m.scoreB>m.scoreA){B.W++;A.L++;B.MP+=1}else{A.T++;B.T++;A.MP+=.5;B.MP+=.5}
+ }));
+ Object.values(map).forEach(x=>x.D=x.PF-x.PA);
+ Object.values(map).forEach(x=>x.BH=x.opps.reduce((sum,id)=>sum+(map[id]?.MP||0),0));
+ return map;
+}
+function standingsData(){
+ const map=rawStats();return Object.values(map).sort((a,b)=>b.MP-a.MP||b.BH-a.BH||b.D-a.D||b.PF-a.PF||teamDisplayById(a.id).localeCompare(teamDisplayById(b.id)));
+}
+
+function pairBacktrack(ids,hist){
+ const memo=new Set();
+ function rec(arr){
+  if(!arr.length)return[];
+  const key=arr.join(",");if(memo.has(key))return null;memo.add(key);
+  const a=arr[0];
+  const candidates=arr.slice(1).map((b,i)=>({b,i:i+1,rematch:hist.has(matchKey(a,b))})).sort((x,y)=>Number(x.rematch)-Number(y.rematch)||x.i-y.i);
+  for(const c of candidates){
+   const rest=arr.filter((_,i)=>i!==0&&i!==c.i);const sub=rec(rest);
+   if(sub)return[[a,c.b],...sub];
+  }return null;
+ }
+ return rec(ids)||[];
+}
+function createNextRound(){
+ syncSettings();if(state.teams.length<2)return alert(t("needTeams"));if(state.rounds.length>=state.settings.maxRounds)return alert(t("maxRoundsDone"));if(!currentRoundComplete())return alert(t("finishRound"));
+ let order=state.rounds.length===0?shuffle(state.teams.map(x=>x.id)):standingsData().map(x=>x.id);
+ let bye=null;
+ if(order.length%2===1){const byes=byeHistory();for(let i=order.length-1;i>=0;i--){if(!byes.has(order[i])){bye=order[i];order.splice(i,1);break}}if(!bye)bye=order.pop()}
+ const pairs=pairBacktrack(order,historySet());const matches=[];let terrain=1;
+ pairs.forEach(([a,b])=>{matches.push({id:uid(),a,b,scoreA:null,scoreB:null,terrain});terrain=terrain>=state.settings.terrains?1:terrain+1});
+ if(bye)matches.push({id:uid(),a:bye,b:null,scoreA:13,scoreB:0,terrain:null,bye:true});
+ state.rounds.push({number:state.rounds.length+1,matches,createdAt:new Date().toISOString()});state.playoff={semis:[],final:null};save();render();switchTab("swiss");
+}
+function setScore(roundIndex,matchId,side,value){
+ const m=state.rounds[roundIndex]?.matches.find(x=>x.id===matchId);if(!m||m.bye)return;const v=value===""?null:Math.max(0,parseInt(value,10)||0);
+ if(side==="A")m.scoreA=v;else m.scoreB=v;save();renderSwiss();renderStandings();renderPlayoff();
+}
+function renderSwiss(){
+ $("kpiTeams").textContent=state.teams.length;$("kpiRound").textContent=state.rounds.length;
+ $("kpiMatches").textContent=state.rounds.flatMap(r=>r.matches).filter(m=>!m.bye&&completed(m)).length;$("kpiLive").textContent=liveClients.size;
+ let status=t("noCurrentRound");if(state.rounds.length){if(state.rounds.length>=state.settings.maxRounds&&currentRoundComplete())status=t("allRoundsComplete");else status=currentRoundComplete()?t("currentRoundComplete"):t("roundInProgress")}
+ $("swissStatus").textContent=status+" "+t("tieAllowed");
+ const root=$("roundsArea");root.innerHTML="";if(!state.rounds.length){root.innerHTML=`<div class="empty">${t("noRounds")}</div>`;return}
+ state.rounds.forEach((r,ri)=>{
+  let h=`<div class="round"><div class="round-head"><strong>${t("round")} ${r.number}</strong><span>${r.matches.filter(m=>!m.bye).length} ${lang==="fr"?"matchs":"matches"}</span></div>`;
+  r.matches.forEach(m=>{
+   if(m.bye){h+=`<div class="bye-row"><span><span class="terrain">${t("bye")}</span> <strong>${esc(teamDisplayById(m.a))}</strong></span><strong>${t("byeWin")} · 13–0</strong></div>`;return}
+   h+=`<div class="match"><span class="terrain">${t("terrain")} ${m.terrain}</span><strong>${esc(teamDisplayById(m.a))}</strong><input class="score swiss-score" data-round="${ri}" data-id="${m.id}" data-side="A" type="number" min="0" value="${m.scoreA??""}"><span class="center">–</span><input class="score swiss-score" data-round="${ri}" data-id="${m.id}" data-side="B" type="number" min="0" value="${m.scoreB??""}"><strong class="right">${esc(teamDisplayById(m.b))}</strong></div>`;
+  });h+="</div>";root.insertAdjacentHTML("beforeend",h);
+ });
+}
+function renderStandings(){
+ const root=$("standingsArea");if(!state.teams.length){root.innerHTML=`<div class="empty">${t("noStandings")}</div>`;return}
+ const s=standingsData();root.innerHTML=`<div class="table-wrap"><table><thead><tr><th>#</th><th>${t("team")}</th><th>${t("matchPts")}</th><th>${t("buchholz")}</th><th>${t("played")}</th><th>${t("wins")}</th><th>${t("losses")}</th><th>${t("ties")}</th><th>${t("pf")}</th><th>${t("pa")}</th><th>${t("diff")}</th></tr></thead><tbody>${s.map((x,i)=>`<tr class="${i<4?"top4":""}"><td class="rank">${i+1}</td><td><strong>${esc(teamDisplayById(x.id))}</strong></td><td><strong>${x.MP}</strong></td><td>${x.BH}</td><td>${x.P}</td><td>${x.W}</td><td>${x.L}</td><td>${x.T}</td><td>${x.PF}</td><td>${x.PA}</td><td>${x.D>0?"+":""}${x.D}</td></tr>`).join("")}</tbody></table></div>`;
+}
+function createPlayoff(){
+ if(state.teams.length<4)return alert(t("playoffNeed4"));if(state.rounds.length<state.settings.maxRounds||!currentRoundComplete())return alert(t("playoffWait"));
+ const top=standingsData().slice(0,4);state.playoff.semis=[{id:uid(),a:top[0].id,b:top[3].id,scoreA:null,scoreB:null},{id:uid(),a:top[1].id,b:top[2].id,scoreA:null,scoreB:null}];state.playoff.final=null;save();renderPlayoff();
+}
+function win(m){if(!m||m.scoreA==null||m.scoreB==null||m.scoreA===m.scoreB)return null;return m.scoreA>m.scoreB?m.a:m.b}
+function maybeFinal(){if(state.playoff.semis.length!==2)return;const a=win(state.playoff.semis[0]),b=win(state.playoff.semis[1]);if(a&&b){if(!state.playoff.final||state.playoff.final.a!==a||state.playoff.final.b!==b)state.playoff.final={id:uid(),a,b,scoreA:null,scoreB:null}}else state.playoff.final=null}
+function setPlayScore(type,index,side,value){const m=type==="semi"?state.playoff.semis[index]:state.playoff.final;if(!m)return;const v=value===""?null:Math.max(0,parseInt(value,10)||0);if(side==="A")m.scoreA=v;else m.scoreB=v;if(type==="semi")maybeFinal();save();renderPlayoff()}
+function playRow(m,type,i){return`<div class="match"><span class="terrain">${type==="final"?t("final"):"SF "+(i+1)}</span><strong>${esc(teamDisplayById(m.a))}</strong><input class="score playoff-score" data-type="${type}" data-index="${i}" data-side="A" type="number" min="0" value="${m.scoreA??""}"><span>–</span><input class="score playoff-score" data-type="${type}" data-index="${i}" data-side="B" type="number" min="0" value="${m.scoreB??""}"><strong class="right">${esc(teamDisplayById(m.b))}</strong></div>`}
+function renderPlayoff(){
+ const root=$("playoffArea");if(!state.playoff.semis.length){root.innerHTML=`<div class="empty">${lang==="fr"?"Aucune série créée.":"No playoff created."}</div>`;return}
+ let h=`<div class="round"><div class="round-head"><strong>${t("semifinals")}</strong></div>`;state.playoff.semis.forEach((m,i)=>h+=playRow(m,"semi",i));h+="</div>";
+ if(state.playoff.final){h+=`<div class="round"><div class="round-head"><strong>${t("final")}</strong></div>${playRow(state.playoff.final,"final",0)}</div>`;const c=win(state.playoff.final);if(c)h+=`<div class="notice green" style="margin-top:12px;text-align:center;font-size:18px"><strong>🏆 ${t("champion")}: ${esc(teamDisplayById(c))}</strong></div>`}
+ root.innerHTML=h;
+}
+
+function publicState(){
+ return{
+  version:1, tournamentName:state.settings.name, sentAt:new Date().toISOString(), teams:state.teams.map(tm=>({id:tm.id,anchorName:tm.anchorName})),
+  rounds:state.rounds, standings:standingsData(), playoff:state.playoff
+ };
+}
+function broadcastLive(){
+ if(!liveActive)return;const data=publicState();for(const c of [...liveClients]){try{if(c.open)c.send(data);else liveClients.delete(c)}catch(e){liveClients.delete(c)}}renderLiveIndicators();
+}
+function renderLiveIndicators(){
+ $("liveDot").classList.toggle("on",liveActive);$("liveText").textContent=liveActive?t("liveOn"):t("liveOff");$("kpiLive").textContent=liveClients.size;
+}
+function normalizeBaseUrl(input){
+ try{const u=new URL(input);if(!["http:","https:"].includes(u.protocol))return null;u.hash="";u.search="";if(!u.pathname.endsWith("/"))u.pathname=u.pathname.replace(/[^/]+$/,"");return u.href}catch(e){return null}
+}
+function buildViewerUrl(base,peerId){return new URL(`public.html?host=${encodeURIComponent(peerId)}`,base).href}
+function startLive(){
+ const base=normalizeBaseUrl($("publicBaseUrl").value.trim());if(!base)return alert(t("enterPublicUrl"));
+ localStorage.setItem("povPublicBaseUrl",base);if(typeof Peer==="undefined" || typeof QRCode==="undefined")return alert(t("peerUnavailable"));
+ if(peer){try{peer.destroy()}catch(e){}}
+ livePeerId=localStorage.getItem(PEER_KEY);if(!livePeerId){livePeerId="pov-"+Math.random().toString(36).slice(2,10);localStorage.setItem(PEER_KEY,livePeerId)}
+ peer=new Peer(livePeerId,{debug:0});
+ peer.on("open",id=>{
+  liveActive=true;livePeerId=id;viewerUrl=buildViewerUrl(base,id);$("viewerLink").textContent=viewerUrl;$("liveDetails").classList.remove("hidden");$("startLive").classList.add("hidden");$("stopLive").classList.remove("hidden");
+  const qr=$("qrCode");qr.innerHTML="";new QRCode(qr,{text:viewerUrl,width:210,height:210,colorDark:"#071b30",colorLight:"#ffffff",correctLevel:QRCode.CorrectLevel.M});
+  $("hostWarning").className="notice green";$("hostWarning").textContent=t("liveStarted");renderLiveIndicators();broadcastLive();
+ });
+ peer.on("connection",conn=>{conn.on("open",()=>{liveClients.add(conn);conn.send(publicState());renderLiveIndicators()});conn.on("close",()=>{liveClients.delete(conn);renderLiveIndicators()});conn.on("error",()=>{liveClients.delete(conn);renderLiveIndicators()})});
+ peer.on("error",err=>{if(err.type==="unavailable-id"){localStorage.removeItem(PEER_KEY);livePeerId=null;$("hostWarning").className="notice red";$("hostWarning").textContent="Live ID temporarily unavailable. Press Start Live Board again."}else{$("hostWarning").className="notice red";$("hostWarning").textContent=err.message||String(err)}});
+}
+function stopLive(){
+ liveActive=false;liveClients.clear();if(peer){try{peer.destroy()}catch(e){}}peer=null;$("startLive").classList.remove("hidden");$("stopLive").classList.add("hidden");$("liveDetails").classList.add("hidden");
+ $("qrCode").innerHTML=`<div class="empty">${t("qrWaiting")}</div>`;$("hostWarning").className="notice gold";$("hostWarning").textContent=t("liveStopped");renderLiveIndicators();
+}
+function resetRounds(){if(!confirm(t("resetConfirm")))return;state.rounds=[];state.playoff={semis:[],final:null};save();render()}
+function switchTab(name){document.querySelectorAll(".tab-btn").forEach(b=>b.classList.toggle("active",b.dataset.tab===name));document.querySelectorAll(".panel").forEach(p=>p.classList.toggle("active",p.id===`panel-${name}`))}
+function render(){renderPlayers();renderTeams();renderSwiss();renderStandings();renderPlayoff();renderLiveIndicators()}
+
+document.addEventListener("DOMContentLoaded",()=>{
+ load();setLang(lang);
+ document.querySelectorAll(".tab-btn").forEach(b=>b.addEventListener("click",()=>switchTab(b.dataset.tab)));
+ $("langEn").addEventListener("click",()=>setLang("en"));$("langFr").addEventListener("click",()=>setLang("fr"));
+ $("addShooter").addEventListener("click",()=>addPlayer("shooter"));$("addPointer").addEventListener("click",()=>addPlayer("pointer"));
+ $("shooterInput").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();addPlayer("shooter")}});$("pointerInput").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();addPlayer("pointer")}});
+ $("buildTeams").addEventListener("click",buildTeams);$("reshuffleTeams").addEventListener("click",buildTeams);$("nextRound").addEventListener("click",createNextRound);$("resetRounds").addEventListener("click",resetRounds);
+ $("createPlayoff").addEventListener("click",createPlayoff);$("printTournament").addEventListener("click",()=>window.print());$("startLive").addEventListener("click",startLive);$("stopLive").addEventListener("click",stopLive);
+ $("copyLink").addEventListener("click",async()=>{try{await navigator.clipboard.writeText(viewerUrl);$("copyLink").textContent=t("copyDone");setTimeout(()=>$("copyLink").textContent=t("copyLink"),1300)}catch(e){}});
+ $("openViewer").addEventListener("click",()=>{if(viewerUrl)window.open(viewerUrl,"_blank")});
+ ["tournamentName","teamSize","teamMethod","maxRounds","terrainCount"].forEach(id=>$(id).addEventListener("change",syncSettings));
+ document.addEventListener("click",e=>{const b=e.target.closest(".remove-player");if(b)removePlayer(b.dataset.role,b.dataset.id)});
+ document.addEventListener("change",e=>{if(e.target.matches(".swiss-score"))setScore(Number(e.target.dataset.round),e.target.dataset.id,e.target.dataset.side,e.target.value);if(e.target.matches(".playoff-score"))setPlayScore(e.target.dataset.type,Number(e.target.dataset.index),e.target.dataset.side,e.target.value)});
+ render();
+});
+
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#071b30">
+<title>Pétanque Ottawa-Vanier | Tournament Manager</title>
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.5/dist/peerjs.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
+<script src="app.js" defer></script>
+</head>
+<body>
+<header class="hero">
+  <div class="shell hero-inner">
+    <div class="brand">
+      <img src="pov-logo.png" alt="Pétanque Ottawa-Vanier logo" class="logo">
+      <div>
+        <h1>Pétanque Ottawa-Vanier</h1>
+        <p data-i18n="managerSubtitle">Swiss Tournament Manager · Partner Draw · Live Scores</p>
+      </div>
+    </div>
+    <div class="hero-actions no-print">
+      <div class="live-pill"><span id="liveDot" class="live-dot"></span><span id="liveText" data-i18n="liveOff">Live board off</span></div>
+      <button id="langEn" class="lang-btn active">EN</button>
+      <button id="langFr" class="lang-btn">FR</button>
+    </div>
+  </div>
+</header>
+
+<div class="tabs-wrap no-print">
+  <nav class="shell tabs">
+    <button class="tab-btn active" data-tab="teams" data-i18n="tabTeams">Players & Teams</button>
+    <button class="tab-btn" data-tab="swiss" data-i18n="tabSwiss">Swiss Tournament</button>
+    <button class="tab-btn" data-tab="standings" data-i18n="tabStandings">Standings</button>
+    <button class="tab-btn" data-tab="live" data-i18n="tabLive">Live & QR</button>
+  </nav>
+</div>
+
+<main class="shell">
+<section id="panel-teams" class="panel active">
+  <div class="grid">
+    <article class="card span-4">
+      <h2 data-i18n="tournamentSetup">Tournament setup</h2>
+      <p class="sub" data-i18n="tournamentSetupSub">Set the event format before building teams.</p>
+      <div class="field"><label data-i18n="tournamentName">Tournament name</label><input id="tournamentName" value="Pétanque Ottawa-Vanier Tournament"></div>
+      <div class="row2">
+        <div class="field"><label data-i18n="teamFormat">Team format</label>
+          <select id="teamSize">
+            <option value="1" data-i18n="singles">Singles / Tête-à-tête</option>
+            <option value="2" selected data-i18n="doubles">Doubles / Doublettes</option>
+            <option value="3" data-i18n="triples">Triples / Triplettes</option>
+          </select>
+        </div>
+        <div class="field"><label data-i18n="teamMethod">Team method</label>
+          <select id="teamMethod">
+            <option value="balanced" data-i18n="balanced">Balanced partner draw</option>
+            <option value="random" data-i18n="random">Fully random</option>
+          </select>
+        </div>
+      </div>
+      <div class="notice gold" data-i18n="teamNamingNote">Teams are named after their shooter — for example, “Team Senih”.</div>
+    </article>
+
+    <article class="card span-8">
+      <h2 data-i18n="playerPools">Player pools</h2>
+      <p class="sub" data-i18n="playerPoolsSub">Enter shooters and pointers separately. Balanced mode uses the roles when forming teams.</p>
+      <div class="pool-wrap">
+        <div class="pool">
+          <div class="pool-head"><h3 data-i18n="shooters">Shooters / Tireurs</h3><span id="shooterCount" class="count">0</span></div>
+          <div class="pool-body">
+            <div class="add-line"><input id="shooterInput" placeholder="Shooter name"><button id="addShooter" class="btn btn-primary" data-i18n="add">Add</button></div>
+            <div id="shooterList" class="player-list"></div><div id="shooterEmpty" class="empty" data-i18n="noShooters">No shooters added.</div>
+          </div>
+        </div>
+        <div class="pool">
+          <div class="pool-head"><h3 data-i18n="pointers">Pointers / Pointeurs</h3><span id="pointerCount" class="count">0</span></div>
+          <div class="pool-body">
+            <div class="add-line"><input id="pointerInput" placeholder="Pointer name"><button id="addPointer" class="btn btn-primary" data-i18n="add">Add</button></div>
+            <div id="pointerList" class="player-list"></div><div id="pointerEmpty" class="empty" data-i18n="noPointers">No pointers added.</div>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <article class="card">
+      <div class="toolbar-between">
+        <div><h2 data-i18n="generatedTeams">Generated teams</h2><p class="sub" id="teamSummary" data-i18n="noTeams">No teams built yet.</p></div>
+        <div class="toolbar no-print">
+          <button id="buildTeams" class="btn btn-gold" data-i18n="buildTeams">Build teams</button>
+          <button id="reshuffleTeams" class="btn btn-soft" data-i18n="reshuffle">Reshuffle</button>
+        </div>
+      </div>
+      <div id="teamGrid" class="team-grid"></div>
+    </article>
+  </div>
+</section>
+
+<section id="panel-swiss" class="panel">
+  <div class="grid">
+    <article class="card span-4">
+      <h2 data-i18n="swissSetup">Swiss setup</h2>
+      <p class="sub" data-i18n="swissSetupSub">Each new round is paired from the current standings while avoiding repeat opponents when possible.</p>
+      <div class="row2">
+        <div class="field"><label data-i18n="swissRounds">Swiss rounds</label>
+          <select id="maxRounds"><option value="3">3</option><option value="4" selected>4</option><option value="5">5</option><option value="6">6</option></select>
+        </div>
+        <div class="field"><label data-i18n="terrains">Terrains</label><input id="terrainCount" type="number" min="1" value="8"></div>
+      </div>
+      <div class="notice" data-i18n="swissRules">Pairing order: match points → Buchholz → point differential → points scored. A team will not receive a second bye until necessary.</div>
+      <div class="toolbar no-print" style="margin-top:12px">
+        <button id="nextRound" class="btn btn-primary" data-i18n="createNextRound">Create next Swiss round</button>
+        <button id="resetRounds" class="btn btn-danger" data-i18n="resetRounds">Reset rounds</button>
+      </div>
+    </article>
+
+    <article class="card span-8">
+      <div class="kpi-grid">
+        <div class="kpi"><div id="kpiTeams" class="v">0</div><div class="l" data-i18n="teams">Teams</div></div>
+        <div class="kpi"><div id="kpiRound" class="v">0</div><div class="l" data-i18n="roundsPlayed">Rounds created</div></div>
+        <div class="kpi"><div id="kpiMatches" class="v">0</div><div class="l" data-i18n="completedMatches">Completed matches</div></div>
+        <div class="kpi"><div id="kpiLive" class="v">0</div><div class="l" data-i18n="liveViewers">Live viewers</div></div>
+      </div>
+      <div id="swissStatus" class="notice gold" style="margin-top:12px"></div>
+    </article>
+
+    <article class="card">
+      <div class="toolbar-between">
+        <div><h2 data-i18n="roundsMatches">Rounds & matches</h2><p class="sub" data-i18n="scoreSub">Enter scores after each match. The next Swiss round unlocks when all current-round matches are complete.</p></div>
+        <button id="printTournament" class="btn btn-soft no-print" data-i18n="printPdf">Print / Save PDF</button>
+      </div>
+      <div id="roundsArea"></div>
+    </article>
+  </div>
+</section>
+
+<section id="panel-standings" class="panel">
+  <div class="grid">
+    <article class="card">
+      <div class="toolbar-between">
+        <div><h2 data-i18n="standings">Swiss standings</h2><p class="sub" data-i18n="standingsSub">Buchholz is the sum of your opponents’ match points and rewards strength of schedule.</p></div>
+        <button id="createPlayoff" class="btn btn-green no-print" data-i18n="top4Playoff">Create Top 4 playoff</button>
+      </div>
+      <div id="standingsArea"></div>
+    </article>
+    <article class="card">
+      <h2 data-i18n="playoff">Optional Top 4 playoff</h2>
+      <p class="sub" data-i18n="playoffSub">1st vs 4th and 2nd vs 3rd. The final appears after both semifinal scores are entered.</p>
+      <div id="playoffArea"></div>
+    </article>
+  </div>
+</section>
+
+<section id="panel-live" class="panel">
+  <div class="grid">
+    <article class="card span-5">
+      <h2 data-i18n="liveBoard">Public live scoreboard</h2>
+      <p class="sub" data-i18n="liveBoardSub">Spectators scan one QR code and see standings, pairings and scores update on their phones.</p>
+      <div id="hostWarning" class="notice gold"></div>
+      <div class="field" style="margin-top:12px"><label data-i18n="publicUrl">Public website URL</label><input id="publicBaseUrl" placeholder="https://your-site.netlify.app/"></div>
+      <div class="toolbar">
+        <button id="startLive" class="btn btn-gold" data-i18n="startLive">Start live board</button>
+        <button id="stopLive" class="btn btn-danger hidden" data-i18n="stopLive">Stop live board</button>
+      </div>
+      <div id="liveDetails" class="hidden" style="margin-top:14px">
+        <label data-i18n="spectatorLink">Spectator link</label>
+        <div id="viewerLink" class="live-link"></div>
+        <div class="toolbar" style="margin-top:9px">
+          <button id="copyLink" class="btn btn-soft btn-sm" data-i18n="copyLink">Copy link</button>
+          <button id="openViewer" class="btn btn-soft btn-sm" data-i18n="openBoard">Open public board</button>
+        </div>
+      </div>
+      <div class="notice" style="margin-top:14px" data-i18n="liveRequirement">Free live mode uses a direct browser-to-browser connection. Keep this organizer page open during the tournament. No spectator account is required.</div>
+    </article>
+
+    <article class="card span-7">
+      <h2 data-i18n="scanQr">Scan to follow live</h2>
+      <p class="sub" data-i18n="scanQrSub">Once the site is hosted publicly and Live Board is started, this QR opens the spectator scoreboard.</p>
+      <div id="qrCode" class="qr-box"><div class="empty" data-i18n="qrWaiting">Start Live Board to create the QR code.</div></div>
+    </article>
+  </div>
+</section>
+</main>
+<footer class="shell footer">Pétanque Ottawa-Vanier · Tournament Manager</footer>
+</body>
+</html>

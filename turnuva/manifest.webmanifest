@@ -1,0 +1,20 @@
+{
+  "name": "Pétanque Ottawa-Vanier Tournament Manager",
+  "short_name": "POV Pétanque",
+  "description": "Swiss pétanque tournament manager with partner draw, standings, playoffs and live scores.",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f5f7fa",
+  "theme_color": "#071b30",
+  "lang": "en",
+  "categories": ["sports", "utilities"],
+  "icons": [
+    {"src": "pov-logo.png", "sizes": "any", "type": "image/png", "purpose": "any maskable"}
+  ],
+  "shortcuts": [
+    {"name": "Tournament Manager", "short_name": "Manager", "url": "./"},
+    {"name": "Live Scoreboard", "short_name": "Live Scores", "url": "./public.html"}
+  ]
+}

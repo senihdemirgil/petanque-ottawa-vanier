@@ -4,11 +4,19 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#071b30">
+<meta name="application-name" content="POV Pétanque">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="POV Pétanque">
+<link rel="manifest" href="manifest.webmanifest?v=4">
+<link rel="apple-touch-icon" href="pov-logo.png?v=4">
+<link rel="icon" type="image/png" sizes="32x32" href="pov-logo.png?v=4">
 <title>Pétanque Ottawa-Vanier | Tournament Manager</title>
-<link rel="stylesheet" href="styles.css?v=3">
+<link rel="stylesheet" href="styles.css?v=4">
 <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.5/dist/peerjs.min.js" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
-<script src="app.js?v=3" defer></script>
+<script src="app.js?v=4" defer></script>
+<script src="pwa.js?v=4" defer></script>
 </head>
 <body>
 <header class="hero">
@@ -22,6 +30,7 @@
     </div>
     <div class="hero-actions no-print">
       <div class="live-pill"><span id="liveDot" class="live-dot"></span><span id="liveText" data-i18n="liveOff">Live board off</span></div>
+      <button id="installAppBtn" class="lang-btn install-app hidden">⬇ Install App</button>
       <button id="langEn" class="lang-btn active">EN</button>
       <button id="langFr" class="lang-btn">FR</button>
     </div>

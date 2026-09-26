@@ -18,8 +18,8 @@ en:{
  buildTeams:"Build teams",reshuffle:"Reshuffle",swissSetup:"Swiss setup",swissSetupSub:"Each new round is paired from the current standings while avoiding repeat opponents when possible.",swissRounds:"Swiss rounds",terrains:"Terrains",
  swissRules:"Pairing order: match points → Buchholz → point differential → points scored. A team will not receive a second bye until necessary.",createNextRound:"Create next Swiss round",resetRounds:"Reset rounds",
  teams:"Teams",roundsPlayed:"Rounds created",completedMatches:"Completed matches",liveViewers:"Live viewers",roundsMatches:"Rounds & matches",scoreSub:"Enter scores after each match. The next Swiss round unlocks when all current-round matches are complete.",
- printPdf:"Print / Save PDF",standings:"Swiss standings",standingsSub:"Buchholz is the sum of your opponents’ match points and rewards strength of schedule.",top4Playoff:"Create Top 4 playoff",
- playoff:"Optional Top 4 playoff",playoffSub:"1st vs 4th and 2nd vs 3rd. The final appears after both semifinal scores are entered.",liveBoard:"Public live scoreboard",
+ printPdf:"Print / Save PDF",standings:"Swiss standings",standingsSub:"Buchholz is the sum of your opponents’ match points and rewards strength of schedule.",
+ playoff:"Playoffs",playoffSub:"Choose a 4, 8, 16 or 32-team Championship bracket, then decide whether to add an equal-size Consolation bracket.",createPlayoffs:"Create playoffs",championshipPlayoff:"Championship Playoff",consolationPlayoff:"Consolation Playoff",championshipOnly:"Championship only",withConsolation:"Championship + Consolation",liveBoard:"Public live scoreboard",
  liveBoardSub:"Spectators scan one QR code and see standings, pairings and scores update on their phones.",publicUrl:"Public website URL",startLive:"Start live board",stopLive:"Stop live board",spectatorLink:"Spectator link",
  copyLink:"Copy link",openBoard:"Open public board",liveRequirement:"Free live mode uses a direct browser-to-browser connection. Keep this organizer page open during the tournament. No spectator account is required.",
  scanQr:"Scan to follow live",scanQrSub:"Once the site is hosted publicly and Live Board is started, this QR opens the spectator scoreboard.",qrWaiting:"Start Live Board to create the QR code.",
@@ -27,7 +27,7 @@ en:{
  noRounds:"No Swiss rounds have been created yet.",round:"Round",terrain:"Terrain",bye:"BYE",byeWin:"Bye win",matchPts:"Pts",buchholz:"BH",played:"P",wins:"W",losses:"L",ties:"T",pf:"PF",pa:"PA",diff:"Diff",
  noStandings:"Build teams to see standings.",needTeams:"Build at least two teams first.",finishRound:"Finish every match in the current round before creating the next one.",maxRoundsDone:"All configured Swiss rounds have been created.",
  duplicatePlayer:"That player is already registered.",needPlayers:"Add players first.",notEnoughPlayers:"Not enough players for one complete team.",unassignedNote:"Player count does not divide evenly by the selected format.",
- resetConfirm:"Reset all Swiss rounds, scores and playoff?",playoffNeed4:"At least four teams are required.",playoffWait:"Complete all configured Swiss rounds before creating the playoff.",semifinals:"Semifinals",final:"Final",champion:"Champion",
+ resetConfirm:"Reset all Swiss rounds, scores and playoffs?",playoffWait:"Complete all configured Swiss rounds before creating the playoffs.",playoffNeedTeams:"This setup needs at least {n} total teams: {size} Championship + {size} Consolation.",playoffNeedMainTeams:"This setup needs at least {size} teams for the Championship bracket.",noPlayoff:"No playoff bracket has been created yet.",semifinals:"Semifinals",quarterfinals:"Quarterfinals",roundOf16:"Round of 16",roundOf32:"Round of 32",final:"Final",champion:"Champion",consolationChampion:"Consolation Champion",
  localHostWarn:"You are opening the site as a local file. The tournament manager works, but phone QR sharing requires the folder to be published on a free web host first. Then paste that public URL here.",
  hostedOk:"This page is already hosted publicly. Live QR sharing can use the current site address.",enterPublicUrl:"Enter the public website URL first.",peerUnavailable:"Live connection library could not load. Check your internet connection.",
  liveStarted:"Live board is running. Keep this organizer tab open.",liveStopped:"Live board stopped.",copyDone:"Link copied.",currentRoundComplete:"Current round complete — next Swiss round is ready.",
@@ -43,8 +43,8 @@ fr:{
  buildTeams:"Créer les équipes",reshuffle:"Mélanger",swissSetup:"Configuration suisse",swissSetupSub:"Chaque nouvelle ronde est appariée selon le classement actuel tout en évitant les adversaires déjà rencontrés lorsque possible.",swissRounds:"Rondes suisses",terrains:"Terrains",
  swissRules:"Ordre d’appariement : points de match → Buchholz → différentiel → points marqués. Une équipe ne reçoit pas un deuxième bye avant que ce soit nécessaire.",createNextRound:"Créer la prochaine ronde",resetRounds:"Réinitialiser les rondes",
  teams:"Équipes",roundsPlayed:"Rondes créées",completedMatches:"Matchs terminés",liveViewers:"Spectateurs en direct",roundsMatches:"Rondes et matchs",scoreSub:"Entrez les scores après chaque match. La ronde suivante se débloque lorsque tous les matchs sont terminés.",
- printPdf:"Imprimer / PDF",standings:"Classement suisse",standingsSub:"Le Buchholz est la somme des points de match de vos adversaires et récompense la force du parcours.",top4Playoff:"Créer les séries Top 4",
- playoff:"Séries Top 4 facultatives",playoffSub:"1er contre 4e et 2e contre 3e. La finale apparaît après les deux demi-finales.",liveBoard:"Tableau public en direct",
+ printPdf:"Imprimer / PDF",standings:"Classement suisse",standingsSub:"Le Buchholz est la somme des points de match de vos adversaires et récompense la force du parcours.",
+ playoff:"Séries éliminatoires",playoffSub:"Choisissez un tableau Championnat de 4, 8, 16 ou 32 équipes, puis décidez si vous ajoutez un tableau Consolation de même taille.",createPlayoffs:"Créer les séries",championshipPlayoff:"Série Championnat",consolationPlayoff:"Série Consolation",championshipOnly:"Championnat seulement",withConsolation:"Championnat + Consolation",liveBoard:"Tableau public en direct",
  liveBoardSub:"Les spectateurs scannent un seul code QR et voient le classement, les appariements et les scores se mettre à jour sur leur téléphone.",publicUrl:"URL publique du site",startLive:"Démarrer le direct",stopLive:"Arrêter le direct",spectatorLink:"Lien spectateur",
  copyLink:"Copier le lien",openBoard:"Ouvrir le tableau",liveRequirement:"Le mode direct gratuit utilise une connexion directe entre navigateurs. Gardez cette page organisateur ouverte pendant le tournoi. Aucun compte spectateur n’est requis.",
  scanQr:"Scanner pour suivre en direct",scanQrSub:"Une fois le site publié et le tableau en direct démarré, ce QR ouvre le tableau des spectateurs.",qrWaiting:"Démarrez le tableau en direct pour créer le code QR.",
@@ -52,15 +52,16 @@ fr:{
  noRounds:"Aucune ronde suisse n’a encore été créée.",round:"Ronde",terrain:"Terrain",bye:"EXEMPT",byeWin:"Victoire par bye",matchPts:"Pts",buchholz:"BH",played:"J",wins:"V",losses:"D",ties:"N",pf:"PM",pa:"PC",diff:"Diff",
  noStandings:"Créez les équipes pour voir le classement.",needTeams:"Créez au moins deux équipes.",finishRound:"Terminez tous les matchs de la ronde actuelle avant de créer la suivante.",maxRoundsDone:"Toutes les rondes suisses configurées ont été créées.",
  duplicatePlayer:"Ce joueur est déjà inscrit.",needPlayers:"Ajoutez d’abord des joueurs.",notEnoughPlayers:"Pas assez de joueurs pour une équipe complète.",unassignedNote:"Le nombre de joueurs n’est pas divisible par le format choisi.",
- resetConfirm:"Réinitialiser toutes les rondes suisses, les scores et les séries ?",playoffNeed4:"Il faut au moins quatre équipes.",playoffWait:"Terminez toutes les rondes suisses configurées avant de créer les séries.",semifinals:"Demi-finales",final:"Finale",champion:"Champion",
+ resetConfirm:"Réinitialiser toutes les rondes suisses, les scores et les séries ?",playoffWait:"Terminez toutes les rondes suisses configurées avant de créer les séries.",playoffNeedTeams:"Cette configuration exige au moins {n} équipes au total : {size} Championnat + {size} Consolation.",playoffNeedMainTeams:"Cette configuration exige au moins {size} équipes pour le tableau Championnat.",noPlayoff:"Aucun tableau éliminatoire n’a encore été créé.",semifinals:"Demi-finales",quarterfinals:"Quarts de finale",roundOf16:"Huitièmes de finale",roundOf32:"Seizièmes de finale",final:"Finale",champion:"Champion",consolationChampion:"Champion Consolation",
  localHostWarn:"Le site est ouvert comme fichier local. Le gestionnaire fonctionne, mais le partage QR sur téléphone nécessite d’abord de publier le dossier sur un hébergeur web gratuit. Collez ensuite l’URL publique ici.",
  hostedOk:"Cette page est déjà publiée. Le partage QR peut utiliser l’adresse actuelle du site.",enterPublicUrl:"Entrez d’abord l’URL publique du site.",peerUnavailable:"La bibliothèque de connexion en direct n’a pas chargé. Vérifiez votre connexion Internet.",
  liveStarted:"Le tableau en direct fonctionne. Gardez cet onglet organisateur ouvert.",liveStopped:"Tableau en direct arrêté.",copyDone:"Lien copié.",currentRoundComplete:"La ronde actuelle est terminée — la prochaine ronde suisse est prête.",
  noCurrentRound:"Créez la première ronde suisse lorsque les équipes sont prêtes.",roundInProgress:"Ronde en cours. Entrez tous les scores pour débloquer le prochain appariement.",allRoundsComplete:"Phase suisse terminée.",tieAllowed:"Les parties chronométrées peuvent être saisies à égalité; chaque équipe reçoit 0,5 point."
 }};
 
+function emptyPlayoff(){return{size:0,consolationEnabled:false,championship:null,consolation:null}}
 function freshState(){return{
- players:{shooter:[],pointer:[]},teams:[],unassigned:[],rounds:[],playoff:{semis:[],final:null},
+ players:{shooter:[],pointer:[]},teams:[],unassigned:[],rounds:[],playoff:emptyPlayoff(),
  settings:{name:"Pétanque Ottawa-Vanier Tournament",teamSize:2,teamMethod:"balanced",maxRounds:4,terrains:8}
 };}
 function t(k){return I[lang][k]||k}
@@ -71,7 +72,8 @@ function normalize(raw){
  const s=freshState(); if(!raw||typeof raw!=="object")return s;
  if(raw.players){if(Array.isArray(raw.players.shooter))s.players.shooter=raw.players.shooter;if(Array.isArray(raw.players.pointer))s.players.pointer=raw.players.pointer}
  if(Array.isArray(raw.teams))s.teams=raw.teams;if(Array.isArray(raw.unassigned))s.unassigned=raw.unassigned;if(Array.isArray(raw.rounds))s.rounds=raw.rounds;
- if(raw.playoff)s.playoff={...s.playoff,...raw.playoff};if(raw.settings)s.settings={...s.settings,...raw.settings};return s;
+ s.rounds.forEach(r=>(r.matches||[]).forEach(m=>{if(m.bye){m.scoreA=13;m.scoreB=7}}));
+ if(raw.playoff&&raw.playoff.championship){s.playoff={...emptyPlayoff(),...raw.playoff,consolationEnabled:raw.playoff.consolationEnabled??!!raw.playoff.consolation}}if(raw.settings)s.settings={...s.settings,...raw.settings};return s;
 }
 function load(){
  try{state=normalize(JSON.parse(localStorage.getItem(KEY)||"null"))}catch(e){state=freshState()}
@@ -104,10 +106,10 @@ function setLang(l){
 function addPlayer(role){
  const inp=role==="shooter"?$("shooterInput"):$("pointerInput");const name=inp.value.trim();if(!name)return;
  const all=[...state.players.shooter,...state.players.pointer];if(all.some(p=>String(p.name).toLowerCase()===name.toLowerCase()))return alert(t("duplicatePlayer"));
- state.players[role].push({id:uid(),name,role});inp.value="";state.teams=[];state.unassigned=[];state.rounds=[];state.playoff={semis:[],final:null};save();render();inp.focus();
+ state.players[role].push({id:uid(),name,role});inp.value="";state.teams=[];state.unassigned=[];state.rounds=[];state.playoff=emptyPlayoff();save();render();inp.focus();
 }
 function removePlayer(role,id){
- state.players[role]=state.players[role].filter(p=>p.id!==id);state.teams=[];state.unassigned=[];state.rounds=[];state.playoff={semis:[],final:null};save();render();
+ state.players[role]=state.players[role].filter(p=>p.id!==id);state.teams=[];state.unassigned=[];state.rounds=[];state.playoff=emptyPlayoff();save();render();
 }
 function renderPlayers(){
  [["shooter","shooterList","shooterEmpty","shooterCount"],["pointer","pointerList","pointerEmpty","pointerCount"]].forEach(([role,l,e,c])=>{
@@ -137,7 +139,7 @@ function buildTeams(){
    if(m.length===3)teams.push(makeTeam(m));
   }left.push(...S.map(x=>x.id),...P.map(x=>x.id));
  }
- state.teams=teams;state.unassigned=left;state.rounds=[];state.playoff={semis:[],final:null};save();render();
+ state.teams=teams;state.unassigned=left;state.rounds=[];state.playoff=emptyPlayoff();save();render();
 }
 function renderTeams(){
  $("teamGrid").innerHTML="";if(!state.teams.length){$("teamSummary").textContent=t("noTeams");return}
@@ -163,7 +165,7 @@ function rawStats(){
  const map={};state.teams.forEach(tm=>map[tm.id]={id:tm.id,MP:0,P:0,W:0,L:0,T:0,PF:0,PA:0,D:0,BH:0,opps:[]});
  state.rounds.forEach(r=>r.matches.forEach(m=>{
   const A=map[m.a];if(!A)return;
-  if(m.bye){A.P++;A.W++;A.MP+=1;A.PF+=13;A.D+=13;return}
+  if(m.bye){A.P++;A.W++;A.MP+=1;A.PF+=13;A.PA+=7;return}
   if(!completed(m))return;const B=map[m.b];if(!B)return;
   A.P++;B.P++;A.PF+=m.scoreA;A.PA+=m.scoreB;B.PF+=m.scoreB;B.PA+=m.scoreA;A.opps.push(B.id);B.opps.push(A.id);
   if(m.scoreA>m.scoreB){A.W++;B.L++;A.MP+=1}else if(m.scoreB>m.scoreA){B.W++;A.L++;B.MP+=1}else{A.T++;B.T++;A.MP+=.5;B.MP+=.5}
@@ -197,8 +199,8 @@ function createNextRound(){
  if(order.length%2===1){const byes=byeHistory();for(let i=order.length-1;i>=0;i--){if(!byes.has(order[i])){bye=order[i];order.splice(i,1);break}}if(!bye)bye=order.pop()}
  const pairs=pairBacktrack(order,historySet());const matches=[];let terrain=1;
  pairs.forEach(([a,b])=>{matches.push({id:uid(),a,b,scoreA:null,scoreB:null,terrain});terrain=terrain>=state.settings.terrains?1:terrain+1});
- if(bye)matches.push({id:uid(),a:bye,b:null,scoreA:13,scoreB:0,terrain:null,bye:true});
- state.rounds.push({number:state.rounds.length+1,matches,createdAt:new Date().toISOString()});state.playoff={semis:[],final:null};save();render();switchTab("swiss");
+ if(bye)matches.push({id:uid(),a:bye,b:null,scoreA:13,scoreB:7,terrain:null,bye:true});
+ state.rounds.push({number:state.rounds.length+1,matches,createdAt:new Date().toISOString()});state.playoff=emptyPlayoff();save();render();switchTab("swiss");
 }
 function setScore(roundIndex,matchId,side,value){
  const m=state.rounds[roundIndex]?.matches.find(x=>x.id===matchId);if(!m||m.bye)return;const v=value===""?null:Math.max(0,parseInt(value,10)||0);
@@ -213,28 +215,77 @@ function renderSwiss(){
  state.rounds.forEach((r,ri)=>{
   let h=`<div class="round"><div class="round-head"><strong>${t("round")} ${r.number}</strong><span>${r.matches.filter(m=>!m.bye).length} ${lang==="fr"?"matchs":"matches"}</span></div>`;
   r.matches.forEach(m=>{
-   if(m.bye){h+=`<div class="bye-row"><span><span class="terrain">${t("bye")}</span> <strong>${esc(teamDisplayById(m.a))}</strong></span><strong>${t("byeWin")} · 13–0</strong></div>`;return}
+   if(m.bye){h+=`<div class="bye-row"><span><span class="terrain">${t("bye")}</span> <strong>${esc(teamDisplayById(m.a))}</strong></span><strong>${t("byeWin")} · 13–7</strong></div>`;return}
    h+=`<div class="match"><span class="terrain">${t("terrain")} ${m.terrain}</span><strong>${esc(teamDisplayById(m.a))}</strong><input class="score swiss-score" data-round="${ri}" data-id="${m.id}" data-side="A" type="number" min="0" value="${m.scoreA??""}"><span class="center">–</span><input class="score swiss-score" data-round="${ri}" data-id="${m.id}" data-side="B" type="number" min="0" value="${m.scoreB??""}"><strong class="right">${esc(teamDisplayById(m.b))}</strong></div>`;
   });h+="</div>";root.insertAdjacentHTML("beforeend",h);
  });
 }
 function renderStandings(){
  const root=$("standingsArea");if(!state.teams.length){root.innerHTML=`<div class="empty">${t("noStandings")}</div>`;return}
- const s=standingsData();root.innerHTML=`<div class="table-wrap"><table><thead><tr><th>#</th><th>${t("team")}</th><th>${t("matchPts")}</th><th>${t("buchholz")}</th><th>${t("played")}</th><th>${t("wins")}</th><th>${t("losses")}</th><th>${t("ties")}</th><th>${t("pf")}</th><th>${t("pa")}</th><th>${t("diff")}</th></tr></thead><tbody>${s.map((x,i)=>`<tr class="${i<4?"top4":""}"><td class="rank">${i+1}</td><td><strong>${esc(teamDisplayById(x.id))}</strong></td><td><strong>${x.MP}</strong></td><td>${x.BH}</td><td>${x.P}</td><td>${x.W}</td><td>${x.L}</td><td>${x.T}</td><td>${x.PF}</td><td>${x.PA}</td><td>${x.D>0?"+":""}${x.D}</td></tr>`).join("")}</tbody></table></div>`;
+ const s=standingsData(),cut=state.playoff.size||Number($("playoffSize")?.value)||8;root.innerHTML=`<div class="table-wrap"><table><thead><tr><th>#</th><th>${t("team")}</th><th>${t("matchPts")}</th><th>${t("buchholz")}</th><th>${t("played")}</th><th>${t("wins")}</th><th>${t("losses")}</th><th>${t("ties")}</th><th>${t("pf")}</th><th>${t("pa")}</th><th>${t("diff")}</th></tr></thead><tbody>${s.map((x,i)=>`<tr class="${i<cut?"top4":""}"><td class="rank">${i+1}</td><td><strong>${esc(teamDisplayById(x.id))}</strong></td><td><strong>${x.MP}</strong></td><td>${x.BH}</td><td>${x.P}</td><td>${x.W}</td><td>${x.L}</td><td>${x.T}</td><td>${x.PF}</td><td>${x.PA}</td><td>${x.D>0?"+":""}${x.D}</td></tr>`).join("")}</tbody></table></div>`;
+}
+function seedOrder(n){
+ let order=[1,2];
+ for(let size=2;size<n;size*=2){const mirror=size*2+1,next=[];order.forEach(seed=>next.push(seed,mirror-seed));order=next}
+ return order;
+}
+function buildKnockout(ids){
+ const order=seedOrder(ids.length),rounds=[];
+ const first=[];for(let i=0;i<order.length;i+=2){first.push({id:uid(),a:ids[order[i]-1],b:ids[order[i+1]-1],scoreA:null,scoreB:null})}
+ rounds.push({matches:first});let count=first.length;
+ while(count>1){count=Math.floor(count/2);rounds.push({matches:Array.from({length:count},()=>({id:uid(),a:null,b:null,scoreA:null,scoreB:null}))})}
+ return{entrants:[...ids],rounds};
+}
+function knockoutWinner(m){if(!m||!m.a||!m.b||m.scoreA==null||m.scoreB==null||m.scoreA===m.scoreB)return null;return m.scoreA>m.scoreB?m.a:m.b}
+function refreshBracket(bracket){
+ if(!bracket?.rounds?.length)return;
+ for(let r=1;r<bracket.rounds.length;r++){
+  const prev=bracket.rounds[r-1].matches,cur=bracket.rounds[r].matches;
+  cur.forEach((m,i)=>{const a=knockoutWinner(prev[i*2]),b=knockoutWinner(prev[i*2+1]);if(m.a!==a||m.b!==b){m.a=a;m.b=b;m.scoreA=null;m.scoreB=null}})
+ }
+}
+function playoffRoundName(matchCount){if(matchCount===16)return t("roundOf32");if(matchCount===8)return t("roundOf16");if(matchCount===4)return t("quarterfinals");if(matchCount===2)return t("semifinals");return t("final")}
+function playoffRequirementText(){
+ const size=Number($("playoffSize")?.value)||state.playoff.size||8;
+ const consolationEnabled=$("consolationMode")?$("consolationMode").value==="yes":!!state.playoff.consolationEnabled;
+ return consolationEnabled
+  ?t("playoffNeedTeams").replaceAll("{n}",String(size*2)).replaceAll("{size}",String(size))
+  :t("playoffNeedMainTeams").replaceAll("{size}",String(size));
+}
+function renderPlayoffRequirement(){
+ if($("playoffRequirement"))$("playoffRequirement").textContent=playoffRequirementText();
+ if(!state.playoff.size&&$("consolationOrganizerSection")){
+  const wants=$("consolationMode")?.value==="yes";$("consolationOrganizerSection").classList.toggle("hidden",!wants);
+ }
 }
 function createPlayoff(){
- if(state.teams.length<4)return alert(t("playoffNeed4"));if(state.rounds.length<state.settings.maxRounds||!currentRoundComplete())return alert(t("playoffWait"));
- const top=standingsData().slice(0,4);state.playoff.semis=[{id:uid(),a:top[0].id,b:top[3].id,scoreA:null,scoreB:null},{id:uid(),a:top[1].id,b:top[2].id,scoreA:null,scoreB:null}];state.playoff.final=null;save();renderPlayoff();
+ const size=Number($("playoffSize").value)||8;
+ const consolationEnabled=$("consolationMode").value==="yes";
+ if(state.rounds.length<state.settings.maxRounds||!currentRoundComplete())return alert(t("playoffWait"));
+ const required=size*(consolationEnabled?2:1);
+ if(state.teams.length<required)return alert(playoffRequirementText());
+ const ranked=standingsData().map(x=>x.id),main=ranked.slice(0,size),consolation=consolationEnabled?ranked.slice(size,size*2):[];
+ state.playoff={size,consolationEnabled,championship:buildKnockout(main),consolation:consolationEnabled?buildKnockout(consolation):null};save();renderPlayoff();
 }
-function win(m){if(!m||m.scoreA==null||m.scoreB==null||m.scoreA===m.scoreB)return null;return m.scoreA>m.scoreB?m.a:m.b}
-function maybeFinal(){if(state.playoff.semis.length!==2)return;const a=win(state.playoff.semis[0]),b=win(state.playoff.semis[1]);if(a&&b){if(!state.playoff.final||state.playoff.final.a!==a||state.playoff.final.b!==b)state.playoff.final={id:uid(),a,b,scoreA:null,scoreB:null}}else state.playoff.final=null}
-function setPlayScore(type,index,side,value){const m=type==="semi"?state.playoff.semis[index]:state.playoff.final;if(!m)return;const v=value===""?null:Math.max(0,parseInt(value,10)||0);if(side==="A")m.scoreA=v;else m.scoreB=v;if(type==="semi")maybeFinal();save();renderPlayoff()}
-function playRow(m,type,i){return`<div class="match"><span class="terrain">${type==="final"?t("final"):"SF "+(i+1)}</span><strong>${esc(teamDisplayById(m.a))}</strong><input class="score playoff-score" data-type="${type}" data-index="${i}" data-side="A" type="number" min="0" value="${m.scoreA??""}"><span>–</span><input class="score playoff-score" data-type="${type}" data-index="${i}" data-side="B" type="number" min="0" value="${m.scoreB??""}"><strong class="right">${esc(teamDisplayById(m.b))}</strong></div>`}
+function setPlayScore(kind,roundIndex,matchIndex,side,value){
+ const bracket=state.playoff[kind],m=bracket?.rounds?.[roundIndex]?.matches?.[matchIndex];if(!m||!m.a||!m.b)return;
+ const v=value===""?null:Math.max(0,parseInt(value,10)||0);if(side==="A")m.scoreA=v;else m.scoreB=v;refreshBracket(bracket);save();renderPlayoff();
+}
+function bracketHtml(bracket,kind){
+ if(!bracket?.rounds?.length)return`<div class="empty">${t("noPlayoff")}</div>`;
+ let h="";bracket.rounds.forEach((round,ri)=>{h+=`<div class="round"><div class="round-head"><strong>${playoffRoundName(round.matches.length)}</strong><span>${round.matches.length} ${lang==="fr"?"matchs":"matches"}</span></div>`;
+  round.matches.forEach((m,mi)=>{const disabled=(!m.a||!m.b)?"disabled":"";h+=`<div class="match"><span class="terrain">${mi+1}</span><strong>${esc(m.a?teamDisplayById(m.a):"TBD")}</strong><input ${disabled} class="score playoff-score" data-bracket="${kind}" data-round="${ri}" data-index="${mi}" data-side="A" type="number" min="0" value="${m.scoreA??""}"><span>–</span><input ${disabled} class="score playoff-score" data-bracket="${kind}" data-round="${ri}" data-index="${mi}" data-side="B" type="number" min="0" value="${m.scoreB??""}"><strong class="right">${esc(m.b?teamDisplayById(m.b):"TBD")}</strong></div>`});h+="</div>";
+ });
+ const final=bracket.rounds[bracket.rounds.length-1].matches[0],champ=knockoutWinner(final);if(champ){const label=kind==="championship"?t("champion"):t("consolationChampion");h+=`<div class="notice green" style="margin-top:12px;text-align:center;font-size:18px"><strong>🏆 ${label}: ${esc(teamDisplayById(champ))}</strong></div>`}return h;
+}
 function renderPlayoff(){
- const root=$("playoffArea");if(!state.playoff.semis.length){root.innerHTML=`<div class="empty">${lang==="fr"?"Aucune série créée.":"No playoff created."}</div>`;return}
- let h=`<div class="round"><div class="round-head"><strong>${t("semifinals")}</strong></div>`;state.playoff.semis.forEach((m,i)=>h+=playRow(m,"semi",i));h+="</div>";
- if(state.playoff.final){h+=`<div class="round"><div class="round-head"><strong>${t("final")}</strong></div>${playRow(state.playoff.final,"final",0)}</div>`;const c=win(state.playoff.final);if(c)h+=`<div class="notice green" style="margin-top:12px;text-align:center;font-size:18px"><strong>🏆 ${t("champion")}: ${esc(teamDisplayById(c))}</strong></div>`}
- root.innerHTML=h;
+ if(state.playoff.size&&$("playoffSize"))$("playoffSize").value=String(state.playoff.size);
+ if(state.playoff.size&&$("consolationMode"))$("consolationMode").value=state.playoff.consolationEnabled?"yes":"no";
+ renderPlayoffRequirement();
+ $("championshipArea").innerHTML=bracketHtml(state.playoff.championship,"championship");
+ const showConsolation=state.playoff.size?!!state.playoff.consolationEnabled:$("consolationMode")?.value==="yes";
+ $("consolationOrganizerSection").classList.toggle("hidden",!showConsolation);
+ $("consolationArea").innerHTML=showConsolation?bracketHtml(state.playoff.consolation,"consolation"):"";
 }
 
 function publicState(){
@@ -271,7 +322,7 @@ function stopLive(){
  liveActive=false;liveClients.clear();if(peer){try{peer.destroy()}catch(e){}}peer=null;$("startLive").classList.remove("hidden");$("stopLive").classList.add("hidden");$("liveDetails").classList.add("hidden");
  $("qrCode").innerHTML=`<div class="empty">${t("qrWaiting")}</div>`;$("hostWarning").className="notice gold";$("hostWarning").textContent=t("liveStopped");renderLiveIndicators();
 }
-function resetRounds(){if(!confirm(t("resetConfirm")))return;state.rounds=[];state.playoff={semis:[],final:null};save();render()}
+function resetRounds(){if(!confirm(t("resetConfirm")))return;state.rounds=[];state.playoff=emptyPlayoff();save();render()}
 function switchTab(name){document.querySelectorAll(".tab-btn").forEach(b=>b.classList.toggle("active",b.dataset.tab===name));document.querySelectorAll(".panel").forEach(p=>p.classList.toggle("active",p.id===`panel-${name}`))}
 function render(){renderPlayers();renderTeams();renderSwiss();renderStandings();renderPlayoff();renderLiveIndicators()}
 
@@ -285,8 +336,8 @@ document.addEventListener("DOMContentLoaded",()=>{
  $("createPlayoff").addEventListener("click",createPlayoff);$("printTournament").addEventListener("click",()=>window.print());$("startLive").addEventListener("click",startLive);$("stopLive").addEventListener("click",stopLive);
  $("copyLink").addEventListener("click",async()=>{try{await navigator.clipboard.writeText(viewerUrl);$("copyLink").textContent=t("copyDone");setTimeout(()=>$("copyLink").textContent=t("copyLink"),1300)}catch(e){}});
  $("openViewer").addEventListener("click",()=>{if(viewerUrl)window.open(viewerUrl,"_blank")});
- ["tournamentName","teamSize","teamMethod","maxRounds","terrainCount"].forEach(id=>$(id).addEventListener("change",syncSettings));
+ ["tournamentName","teamSize","teamMethod","maxRounds","terrainCount"].forEach(id=>$(id).addEventListener("change",syncSettings));$("playoffSize").addEventListener("change",renderPlayoffRequirement);$("consolationMode").addEventListener("change",renderPlayoffRequirement);
  document.addEventListener("click",e=>{const b=e.target.closest(".remove-player");if(b)removePlayer(b.dataset.role,b.dataset.id)});
- document.addEventListener("change",e=>{if(e.target.matches(".swiss-score"))setScore(Number(e.target.dataset.round),e.target.dataset.id,e.target.dataset.side,e.target.value);if(e.target.matches(".playoff-score"))setPlayScore(e.target.dataset.type,Number(e.target.dataset.index),e.target.dataset.side,e.target.value)});
+ document.addEventListener("change",e=>{if(e.target.matches(".swiss-score"))setScore(Number(e.target.dataset.round),e.target.dataset.id,e.target.dataset.side,e.target.value);if(e.target.matches(".playoff-score"))setPlayScore(e.target.dataset.bracket,Number(e.target.dataset.round),Number(e.target.dataset.index),e.target.dataset.side,e.target.value)});
  render();
 });

@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#071b30">
 <title>Pétanque Ottawa-Vanier | Live Scores</title>
-<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="styles.css?v=3">
 <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.5/dist/peerjs.min.js" defer></script>
-<script src="public.js" defer></script>
+<script src="public.js?v=3" defer></script>
 </head>
 <body>
 <header class="public-hero">
@@ -33,6 +33,14 @@
   <section class="public-section">
     <div class="section-title"><h2 data-i18n="standings">Standings</h2></div>
     <div id="publicStandings"></div>
+  </section>
+  <section class="public-section">
+    <div class="section-title"><h2 data-i18n="championshipPlayoff">Championship Playoff</h2></div>
+    <div id="publicChampionship"></div>
+  </section>
+  <section id="publicConsolationSection" class="public-section hidden">
+    <div class="section-title"><h2 data-i18n="consolationPlayoff">Consolation Playoff</h2></div>
+    <div id="publicConsolation"></div>
   </section>
   <section class="public-section">
     <div class="section-title"><h2 data-i18n="results">Previous results</h2></div>

@@ -5,10 +5,10 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#071b30">
 <title>Pétanque Ottawa-Vanier | Tournament Manager</title>
-<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="styles.css?v=3">
 <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.5/dist/peerjs.min.js" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
-<script src="app.js" defer></script>
+<script src="app.js?v=3" defer></script>
 </head>
 <body>
 <header class="hero">
@@ -139,14 +139,36 @@
     <article class="card">
       <div class="toolbar-between">
         <div><h2 data-i18n="standings">Swiss standings</h2><p class="sub" data-i18n="standingsSub">Buchholz is the sum of your opponents’ match points and rewards strength of schedule.</p></div>
-        <button id="createPlayoff" class="btn btn-green no-print" data-i18n="top4Playoff">Create Top 4 playoff</button>
       </div>
       <div id="standingsArea"></div>
     </article>
     <article class="card">
-      <h2 data-i18n="playoff">Optional Top 4 playoff</h2>
-      <p class="sub" data-i18n="playoffSub">1st vs 4th and 2nd vs 3rd. The final appears after both semifinal scores are entered.</p>
-      <div id="playoffArea"></div>
+      <div class="toolbar-between">
+        <div>
+          <h2 data-i18n="playoff">Playoffs</h2>
+          <p class="sub" data-i18n="playoffSub">Choose a 4, 8, 16 or 32-team Championship bracket, then decide whether to add an equal-size Consolation bracket.</p>
+        </div>
+        <div class="toolbar no-print">
+          <select id="playoffSize" style="width:auto;min-width:150px">
+            <option value="4">4 teams</option>
+            <option value="8" selected>8 teams</option>
+            <option value="16">16 teams</option>
+            <option value="32">32 teams</option>
+          </select>
+          <select id="consolationMode" style="width:auto;min-width:210px">
+            <option value="no" selected data-i18n="championshipOnly">Championship only</option>
+            <option value="yes" data-i18n="withConsolation">Championship + Consolation</option>
+          </select>
+          <button id="createPlayoff" class="btn btn-green" data-i18n="createPlayoffs">Create playoffs</button>
+        </div>
+      </div>
+      <div id="playoffRequirement" class="notice gold" style="margin-bottom:14px"></div>
+      <h3 data-i18n="championshipPlayoff">Championship Playoff</h3>
+      <div id="championshipArea"></div>
+      <div id="consolationOrganizerSection" class="hidden">
+        <h3 data-i18n="consolationPlayoff" style="margin-top:22px">Consolation Playoff</h3>
+        <div id="consolationArea"></div>
+      </div>
     </article>
   </div>
 </section>

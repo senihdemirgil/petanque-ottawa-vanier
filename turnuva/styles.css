@@ -98,3 +98,12 @@ tr:last-child td{border-bottom:0}
 .viewer-match{display:grid;grid-template-columns:60px 1fr 70px 1fr;gap:10px;align-items:center;padding:13px;border-top:1px solid var(--line)}.viewer-match:first-child{border-top:0}.viewer-score{font-size:21px;font-weight:950;text-align:center;color:var(--navy)}
 .footer{text-align:center;color:#7b8794;font-size:12px;padding:25px 0 35px}
 @media print{.no-print,.tabs-wrap,.hero-actions{display:none!important}.hero{background:#fff;color:#111;border:0}.brand p{color:#555}.card{box-shadow:none}.panel{display:block!important}}
+
+/* PWA */
+.install-app{background:var(--gold)!important;color:var(--navy)!important;border-color:var(--gold)!important;box-shadow:0 7px 20px rgba(247,184,23,.18)}
+@media (display-mode: standalone){
+  body{overscroll-behavior-y:none}
+  .hero{padding-top:env(safe-area-inset-top)}
+  .tabs-wrap{top:env(safe-area-inset-top)}
+}
+@media(max-width:520px){.install-app{width:100%;order:10}}

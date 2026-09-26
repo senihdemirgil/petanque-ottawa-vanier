@@ -8,7 +8,11 @@ const APP_SHELL = [
   "./pwa.js",
   "./styles.css",
   "./manifest.webmanifest",
-  "./pov-logo.png"
+  "./pov-logo.png",
+  "./icon-192.png",
+  "./icon-512.png",
+  "./apple-touch-icon.png",
+  "./favicon-32.png"
 ];
 
 self.addEventListener("install", event => {
@@ -49,16 +53,20 @@ async function cacheFirst(request) {
 self.addEventListener("fetch", event => {
   const req = event.request;
   if (req.method !== "GET") return;
+  const url = new URL(req.url);
 
+  // Keep HTML/JS/CSS fresh so GitHub deployments update promptly, but preserve offline fallback.
   if (req.mode === "navigate" || ["script","style","worker"].includes(req.destination)) {
     event.respondWith(networkFirst(req));
     return;
   }
 
+  // Images, fonts and other static resources can be served quickly from cache.
   if (["image","font"].includes(req.destination)) {
     event.respondWith(cacheFirst(req));
     return;
   }
 
+  // Runtime-cache other GET requests, including CDN resources after first successful load.
   event.respondWith(networkFirst(req));
 });

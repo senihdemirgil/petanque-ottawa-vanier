@@ -18,6 +18,7 @@
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
         refreshing = true;
+        // New deployments take effect cleanly without leaving stale JS/CSS behind.
         location.reload();
       });
     } catch (err) {
